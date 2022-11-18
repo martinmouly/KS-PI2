@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.13; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
 
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
 contract delegate {
 
 
@@ -35,6 +37,20 @@ contract delegate {
         delegate_array.push(Delegate(_owner, _borrower, _amount, true)); 
         hasdelegated[_owner][_borrower] = _amount; 
         emit Authorized(_owner, _borrower, _amount); 
+    }
+
+
+
+    // gestion du deposit de nft
+
+    mapping(address=>uint256[]) public isDepositor;
+
+    // nft deposit
+    function erc721_deposit(uint256 erc721_Id) public{
+        // call safeTransferFrom
+        safeTransferFrom(msg.sender, address(this), erc721_Id);
+        // add the nft to the mapping isDepositor
+        isDepositor[msg.sender].push(1) = erc721_Id;
     }
 
 }
