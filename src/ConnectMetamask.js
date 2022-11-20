@@ -1,6 +1,7 @@
 import React from "react";
 import { ethers } from "ethers";
 import "./ConnectMetamask.css";
+import vUSDC_ABI from "./vUSDC_ABI.json";
 
 class ConnectMetamask extends React.Component {
   constructor(props) {
@@ -11,6 +12,7 @@ class ConnectMetamask extends React.Component {
     this.chainChangedHandler = this.chainChangedHandler.bind(this);
     this.blockNumberHandler = this.blockNumberHandler.bind(this);
     this.signMsgHandler = this.signMsgHandler.bind(this);
+    this.delegateBorrow = this.delegateBorrow.bind(this);
     this.state = {
       errorMsg: "",
       addressUser: "-",
@@ -118,6 +120,22 @@ class ConnectMetamask extends React.Component {
     }
   }
 
+  async delegateBorrow(delegatee, amount) {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+
+    const vUSDC_Polygon_Contract = new ethers.Contract(
+      "0xFCCf3cAbbe80101232d343252614b6A3eE81C989",
+      vUSDC_ABI,
+      provider
+    );
+
+    //const tokenUnits = await vUSDC_Polygon_Contract.decimals();
+    //const tokenAmountInEther = ethers.utils.parseUnits(amount, tokenUnits);
+
+    vUSDC_Polygon_Contract.connect(signer).approveDelegation(delegatee, amount);
+  }
+
   render() {
     return (
       <div>
@@ -128,6 +146,14 @@ class ConnectMetamask extends React.Component {
         <div>Last Block : Number #{this.state.blockNumber}</div>
         <button onClick={this.signMsgHandler}>Sign a Message!</button>
         <div className="errorMsg-red">{this.state.errorMsg}</div>
+        {/* Add possibility to modify inputs for delegating. */}
+        <button
+          onClick={() =>
+            this.delegateBorrow("0x189F35946f3d296E4525FD023B6ec498e8969f20", 1)
+          }
+        >
+          Delegate your Borrow
+        </button>
       </div>
     );
   }
