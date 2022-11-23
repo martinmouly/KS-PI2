@@ -22,7 +22,7 @@ contract delegate {
     }
 
     // mapping to find to who the owner has delegated and how much  
-    mapping(address=> mapping(address=>uint)) public hasdelegated; 
+    mapping(address=> mapping(address=>uint)) public hasDelegated; 
 
     // regarder s'il faut le définir en internal
     Delegate [] public delegate_array; 
@@ -39,12 +39,12 @@ contract delegate {
         // need to add the require to check that the owner has deposit collateral and don't use it 
 
         delegate_array.push(Delegate(_owner, _borrower, _amount, true)); 
-        hasdelegated[_owner][_borrower] = _amount; 
+        hasDelegated[_owner][_borrower] = _amount; 
         emit Authorized(_owner, _borrower, _amount); 
     }
 
 
-    // gestion du deposit de nft
+
 
     mapping(address=>uint256[]) public isDepositor;
 
@@ -55,6 +55,29 @@ contract delegate {
         // add the nft to the mapping isDepositor
         isDepositor[msg.sender].push(erc721_Id);
     }
+
+
+
+    // emprunter 
+
+    mapping(address=> mapping(address=>uint)) public amountBorrowed; 
+
+
+    function borrow(uint _amount, address initialBorrower, address vaultAddress) public {
+        // check that the amount borrowed is superior to 0
+        require(_amount>0, "amount borrowed must be superior to 0");
+        // check that the initial borrower has delegated to the msg.sender
+        require(hasDelegated[initialBorrower][msg.sender]>0, "this borrower has not delegated to you"); // borrow from himself
+        // check that the amount already borrowed + new borrow is inferior to the maximal amount delegated
+        require(_amount + amountBorrowed[msg.sender][_initialBorrower]<=hasDelegated[initialBorrower][msg.sender], "the amount borrowed is superior to the amount delegated");
+        
+        
+        // borrow the amount from Qidao
+        vaultAddress.call.gas(1000000).value(1 ether)("foo(string,uint256)", "argument 1", "argument2"); // foo = fct du contrat vault à appeler Quelle value ?
+        // add the amount borrowed to the mapping amountBorrowed
+        amountBorrowed[msg.sender][_initialBorrower] += _amount;
+
+    }            
     
 
 }
