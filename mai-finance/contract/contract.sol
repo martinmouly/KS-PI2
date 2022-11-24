@@ -29,7 +29,7 @@ contract delegate {
 
     // fonction pour approuver la délagation
     // voir comment remplacer les owner par msg.sender sur remix 
-    function approveDelegation(address _owner, address _borrower, uint _amount) public {
+    function approveDelegation(address _owner, address _borrower, uint _amount) public { // ATTENTION : si on reduit la quantité que l'emprunteur peut emprunter, il peut y avoir une sorte de dette négative
 
         // we check that the msg sender is the owner of the fund 
         require(_owner==msg.sender, "this address is not the owner of the funds");
@@ -44,12 +44,10 @@ contract delegate {
     }
 
 
-
-
     mapping(address=>uint256[]) public isDepositor;
 
     // nft deposit
-    function erc721_deposit(address minter, uint256 erc721_Id) public{
+    function erc721_deposit(address minter, uint256 erc721_Id) public{ // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance
         // call safeTransferFrom
         IERC721(minter).safeTransferFrom(msg.sender, address(this), erc721_Id);
         // add the nft to the mapping isDepositor
@@ -73,10 +71,9 @@ contract delegate {
         
         
         // borrow the amount from Qidao
-        vaultAddress.call.gas(1000000).value(1 ether)("foo(string,uint256)", "argument 1", "argument2"); // foo = fct du contrat vault à appeler Quelle value ?
+        vaultAddress.call.value(0 ether)("foo(string,uint256)", "argument 1", "argument2"); // foo = fct du contrat vault à appeler Quelle value ?
         // add the amount borrowed to the mapping amountBorrowed
         amountBorrowed[msg.sender][_initialBorrower] += _amount;
-
     }            
     
 
