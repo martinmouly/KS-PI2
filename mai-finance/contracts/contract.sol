@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.13; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
+pragma solidity ^0.6.2; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-interface PriceSource {
-	function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);
-}
 
 contract delegate {
 
 
     event Authorized(address indexed owner, address indexed borrower, uint amount); 
+    
+    mapping(address => bool) admin;
+
+    constructor() public {
+        admin[msg.sender] = true;
+    }
 
     // struct to represent a delegation
     struct Delegate {
@@ -20,6 +23,8 @@ contract delegate {
         uint _amount; 
         bool _authorized; 
     }
+
+
 
     // mapping to find to who the owner has delegated and how much  
     mapping(address=> mapping(address=>uint)) public hasDelegated; 
@@ -61,21 +66,39 @@ contract delegate {
     mapping(address=> mapping(address=>uint)) public amountBorrowed; 
 
 
-    function borrow(uint _amount, address initialBorrower, address vaultAddress) public {
+    function borrow(uint _amount, address initialBorrower, address vault) public {
         // check that the amount borrowed is superior to 0
         require(_amount>0, "amount borrowed must be superior to 0");
         // check that the initial borrower has delegated to the msg.sender
         require(hasDelegated[initialBorrower][msg.sender]>0, "this borrower has not delegated to you"); // borrow from himself
         // check that the amount already borrowed + new borrow is inferior to the maximal amount delegated
-        require(_amount + amountBorrowed[msg.sender][_initialBorrower]<=hasDelegated[initialBorrower][msg.sender], "the amount borrowed is superior to the amount delegated");
+        require(_amount + amountBorrowed[msg.sender][initialBorrower]<=hasDelegated[initialBorrower][msg.sender], "the amount borrowed is superior to the amount delegated");
         
         
         // borrow the amount from Qidao
-        vaultAddress.call.value(0 ether)("foo(string,uint256)", "argument 1", "argument2"); // foo = fct du contrat vault à appeler Quelle value ?
+        //vault.call.value(0 ether)("foo(string,uint256)", "argument 1", "argument2"); // foo = fct du contrat vault à appeler Quelle value ?
         // add the amount borrowed to the mapping amountBorrowed
-        amountBorrowed[msg.sender][_initialBorrower] += _amount;
+        //amountBorrowed[msg.sender][initialBorrower] += _amount;
     }            
     
+
+    // admin functions
+
+    function addAdmin(address _admin) public {
+        require(admin[msg.sender], "You are not an admin");
+        admin[_admin] = true;
+    }
+
+    function isAdmin(address _admin) public view returns(bool) {
+        return admin[_admin];
+    }
+
+    mapping(string => address) vaultAddress;
+    //comment retirer un admin ?
+    function editVaultAdress(string memory crypto, address vault) public {
+        require(admin[msg.sender], "You are not an admin");
+        vaultAddress[crypto] = vault;
+    }
 
 }
 
