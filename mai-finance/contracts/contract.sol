@@ -24,13 +24,27 @@ contract delegate {
         bool _authorized; 
     }
 
+    // regarder s'il faut le définir en internal
+    // array of all the delegations
+    Delegate [] public delegations; 
 
-
-    // mapping to find to who the owner has delegated and how much  
+    // mapping to find to who the owner has delegated and how much
+    // delegator=>borrower=>amount delegated  
     mapping(address=> mapping(address=>uint)) public hasDelegated; 
 
-    // regarder s'il faut le définir en internal
-    Delegate [] public delegate_array; 
+    //keep track of the orignil owner adress of the nft vault
+    // original_owner=> nft_id
+    mapping(address=>uint256[]) public isOwner;
+
+    //keep track of the amount borrowed
+    // borrower=>delegator=>amount borrowed 
+    mapping(address=> mapping(address=>uint)) public amountBorrowed; 
+
+    mapping(string => address) vaultAddress;
+
+
+
+    
 
     // fonction pour approuver la délagation
     // voir comment remplacer les owner par msg.sender sur remix 
@@ -43,42 +57,37 @@ contract delegate {
         require (_amount>0, "amount borrowed must be superior to 0");
         // need to add the require to check that the owner has deposit collateral and don't use it 
 
-        delegate_array.push(Delegate(_owner, _borrower, _amount, true)); 
+        delegations.push(Delegate(_owner, _borrower, _amount, true)); 
         hasDelegated[_owner][_borrower] = _amount; 
         emit Authorized(_owner, _borrower, _amount); 
     }
 
 
-    mapping(address=>uint256[]) public isDepositor;
 
     // nft deposit
-    function erc721_deposit(address minter, uint256 erc721_Id) public{ // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance
+    function erc721_deposit(address _minter, uint256 _erc721_Id) public{ // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance
         // call safeTransferFrom
-        IERC721(minter).safeTransferFrom(msg.sender, address(this), erc721_Id);
-        // add the nft to the mapping isDepositor
-        isDepositor[msg.sender].push(erc721_Id);
+        IERC721(_minter).safeTransferFrom(msg.sender, address(this), _erc721_Id);
+        // add the nft to the mapping isOwner
+        isOwner[msg.sender].push(_erc721_Id);
     }
 
 
 
     // emprunter 
-
-    mapping(address=> mapping(address=>uint)) public amountBorrowed; 
-
-
-    function borrow(uint _amount, address initialBorrower, address vault) public {
+    function borrow(uint _amount, address _initialBorrower, address _vault) public {
         // check that the amount borrowed is superior to 0
         require(_amount>0, "amount borrowed must be superior to 0");
         // check that the initial borrower has delegated to the msg.sender
-        require(hasDelegated[initialBorrower][msg.sender]>0, "this borrower has not delegated to you"); // borrow from himself
+        require(hasDelegated[_initialBorrower][msg.sender]>0, "this borrower has not delegated to you"); // borrow from himself
         // check that the amount already borrowed + new borrow is inferior to the maximal amount delegated
-        require(_amount + amountBorrowed[msg.sender][initialBorrower]<=hasDelegated[initialBorrower][msg.sender], "the amount borrowed is superior to the amount delegated");
+        require(_amount + amountBorrowed[msg.sender][_initialBorrower]<=hasDelegated[_initialBorrower][msg.sender], "the amount borrowed is superior to the amount delegated");
         
         
         // borrow the amount from Qidao
-        //vault.call.value(0 ether)("foo(string,uint256)", "argument 1", "argument2"); // foo = fct du contrat vault à appeler Quelle value ?
+        //_vault.call.value(0 ether)("foo(string,uint256)", "argument 1", "argument2"); // foo = fct du contrat _vault à appeler Quelle value ?
         // add the amount borrowed to the mapping amountBorrowed
-        //amountBorrowed[msg.sender][initialBorrower] += _amount;
+        //amountBorrowed[msg.sender][_initialBorrower] += _amount;
     }            
     
 
@@ -93,11 +102,10 @@ contract delegate {
         return admin[_admin];
     }
 
-    mapping(string => address) vaultAddress;
     //comment retirer un admin ?
-    function editVaultAdress(string memory crypto, address vault) public {
+    function edit_VaultAdress(string memory crypto, address _vault) public {
         require(admin[msg.sender], "You are not an admin");
-        vaultAddress[crypto] = vault;
+        vaultAddress[crypto] = _vault;
     }
 
 }
