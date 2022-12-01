@@ -65,9 +65,9 @@ contract delegate {
 
 
     // nft deposit
-    function erc721_deposit(address _minter, uint256 _erc721_Id) public{ // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance
+    function erc721_deposit(address _initialBorrower, uint256 _erc721_Id) public{ // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance
         // call safeTransferFrom
-        IERC721(_minter).safeTransferFrom(msg.sender, address(this), _erc721_Id);
+        IERC721(_initialBorrower).safeTransferFrom(msg.sender, address(this), _erc721_Id);
         // add the nft to the mapping isOwner
         isOwner[msg.sender].push(_erc721_Id);
     }
