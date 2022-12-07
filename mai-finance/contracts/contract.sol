@@ -17,7 +17,7 @@ contract delegate {
 
 // mapping to know who is admin
     mapping(address => bool) admin;
-    
+
     address maiEth = address(0x8D6CeBD76f18E1558D4DB88138e2DeFB3909fAD6); //mini matic on eth address 
     constructor() public {
         admin[msg.sender] = true;
@@ -107,7 +107,20 @@ contract delegate {
         emit WithdrawERC721(msg.sender, vaultAddress[_vault], _erc721_Id);
     }
 
+     function approveDelegation(address _owner, address _borrower, uint _amount, string _vault) public { // ATTENTION : si on reduit la quantité que l'emprunteur peut emprunter, il peut y avoir une sorte de dette négative
+        
+        // security check
+        require(_owner==msg.sender, "this address is not the owner of the funds");
+        require(_borrower!=address(0), "borrower can't be address(0)");
+        require(_borrower!=_owner, "borrower must be different that owner");
+        require (_amount>0, "amount borrowed must be superior to 0");
+        require(vaultAddress[_vault], "the vault doesn't exist"); // demander à nandy si ca marche 
 
+        // update the mapping with the amount authorized 
+        hasDelegated[_owner][_borrower][_vault] = _amount; 
+        emit Approved(_owner, _borrower, _amount, _vault);
+
+    }
 
     // function to call for the borrower to get the fund 
     function borrow(uint _amount, address _delegator, string _vault) public {
