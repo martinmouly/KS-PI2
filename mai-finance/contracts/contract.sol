@@ -4,30 +4,36 @@ pragma solidity ^0.6.2; // regarder la version sur les contracts de qidao 0.5.5 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-
+//contract avec les adresses du mainnet ETHEREUM !!!!!!!
 contract delegate {
 
 
-    event Authorized(address indexed owner, address indexed borrower, uint256 amount); 
     event BorrowedToMaiFinance(address indexed depositor, address vault, uint256 amount);
     event WithdrawERC721(address withdrawer, address vault, uint256 tokenID);
 
+    event Approved(address indexed owner, address indexed borrower, uint amount, string vault); 
+    event PayToMayFinance(uint amount,uint tokenid, string vault); 
+    event Borrowed(uint amount, address delagator,string vault); 
 
+// mapping to know who is admin
+    mapping(address => bool) admin;
+    
+    address maiEth = address(0x8D6CeBD76f18E1558D4DB88138e2DeFB3909fAD6); //mini matic on eth address 
     constructor() public {
         admin[msg.sender] = true;
         vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
+        vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
     }
 
-    // mapping to know who is admin
-    mapping(address => bool) admin;
+    
 
     // mapping to keep track of the amount borrowed by msg.sender
     // borrower=>vault=>amount borrowed
     mapping(address=> mapping(string=>uint)) public borrowedAmount;
 
     // mapping to find to who the owner has delegated and how much
-    // delegator=>borrower=>amount delegated  
-    mapping(address=> mapping(address=>uint)) public hasDelegated; 
+    // delegator=>borrower=>vault=>amount delegated  
+    mapping(address=> mapping(address=>mapping(string=>uint))) public hasDelegated; 
 
     //keep track of the orignil owner adress of the nft vault
     // original_owner => vault name => nft_id
@@ -103,25 +109,34 @@ contract delegate {
 
 
 
-    // fonction pour approuver la délagation
-    // voir comment remplacer les owner par msg.sender sur remix 
-    function approveDelegation(address _owner, address _borrower, uint _amount) public { // ATTENTION : si on reduit la quantité que l'emprunteur peut emprunter, il peut y avoir une sorte de dette négative
-    }
+    // function to call for the borrower to get the fund 
+    function borrow(uint _amount, address _delegator, string _vault) public {
+        //check that the amount borrow is not superior to the amount delegated 
+        require(_amount!=0, "Can't borrow 0 token"); 
+        require(_amount<= hasDelegated[_delegator][msg.sender][_vault], "Borrow an amount superior to the amount delegated");
 
-
-
-    // borrow
-    function borrow(uint _amount, address _delegator, string memory _vault) public {
+        //call the fonction on the mini matic contract to send the 
+        maiEth.transferFrom(address(this),msg.sender,_amount); 
+        //+= to prevent someone calling the contract with a small amount to change his debt 
+        borrowedAmount[msg.sender][_vault] += _amount; 
+        emit Borrowed(_amount, _delegator, _vault);
     }    
 
 
-    // add collateral
-    function addCollateralToMaiFinance(uint _amount, address _delegator, string memory _vault) public {
-
+    // repay to mai finance to deposit collateral 
+    function addCollateralToMaiFinance(uint _amount,uint _tokenid, string _vault) public{
+        vaultAddress[_vault].depositCollateral(_tokenid,_amount); 
+        emit PayToMayFinance(_amount, _tokenid, _vault);
     }
 
     
     
+    // view function to get the token id of an address
+    // user=> adress that we want to see
+    //_vault=> name of the vault (WETH, WBTC)
+    function getTokenIdByVault(address user, string _vault) external view{
+        return isOwner[user][_vault]; 
+    }
 
 
     // admin functions
@@ -141,13 +156,4 @@ contract delegate {
         vaultAddress[_tokenName] = _vault;
     }
 
-    // edit the address of the token contract associated with _tokenName
-    function edit_tokenAddress(string memory _tokenName, address _token) public {
-        require(admin[msg.sender], "You are not an admin");
-        vaultAddress[_tokenName] = _token;
-    }
-
-
-
 }
-
