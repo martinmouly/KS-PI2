@@ -4,17 +4,21 @@ pragma solidity ^0.6.2; // regarder la version sur les contracts de qidao 0.5.5 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-
+//contract avec les adresses du mainnet ETHEREUM !!!!!!!
 contract delegate {
 
 
-    event Authorized(address indexed owner, address indexed borrower, uint amount); 
-    
+    event Approved(address indexed owner, address indexed borrower, uint amount, string vault); 
+    event PayToMayFinance(uint amount,uint tokenid, string vault); 
+    event Borrowed(uint amount, address delagator,string vault); 
+
     mapping(address => bool) admin;
 
+    address maiEth = address(0x8D6CeBD76f18E1558D4DB88138e2DeFB3909fAD6); //mini matic on eth address 
     constructor() public {
         admin[msg.sender] = true;
         vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
+        vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
     }
 
     // mapping to keep track of the amount borrowed by msg.sender
@@ -22,8 +26,8 @@ contract delegate {
     mapping(address=> mapping(string=>uint)) public borrowedAmount;
 
     // mapping to find to who the owner has delegated and how much
-    // delegator=>borrower=>amount delegated  
-    mapping(address=> mapping(address=>uint)) public hasDelegated; 
+    // delegator=>borrower=>vault=>amount delegated  
+    mapping(address=> mapping(address=>mapping(string=>uint))) public hasDelegated; 
 
     //keep track of the orignil owner adress of the nft vault
     // original_owner => vault name => nft_id
@@ -32,70 +36,50 @@ contract delegate {
     // vault name (WETH, WBTC, ...) mapped with the address of the associated contract
     mapping(string => address) vaultAddress;
 
-    mapping(string => address) tokenAddress;
 
-    
+    function approveDelegation(address _owner, address _borrower, uint _amount, string _vault) public { // ATTENTION : si on reduit la quantité que l'emprunteur peut emprunter, il peut y avoir une sorte de dette négative
+        
+        // security check
+        require(_owner==msg.sender, "this address is not the owner of the funds");
+        require(_borrower!=address(0), "borrower can't be address(0)");
+        require(_borrower!=_owner, "borrower must be different that owner");
+        require (_amount>0, "amount borrowed must be superior to 0");
+        require(vaultAddress[_vault], "the vault doesn't exist"); // demander à nandy si ca marche 
 
-    // ERC721 deposit
-    function erc721_deposit(string _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) public{ // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance
-        // check that the msg sender is the owner of the nft
-        require(tokenAddress[_vault].ownerOf(_erc721_Id)==msg.sender, "You must be the owner of the token");
-        // call safeTransferFrom in the vault contract
-        tokenAddress[_vault].safeTransferFrom(msg.sender, address(this), _erc721_Id); // ????? fonctionne ?????
-        // check if our contract received the nft
-        require(tokenAddress[_vault].ownerOf(_erc721_Id)==address(this), "the ERC721 is not in our contract");
-        // add the nft to the mapping isOwner
-        isOwner[msg.sender][_vault].push(_erc721_Id);
-        // emit event
-        emit Deposited(msg.sender, _erc721_Id);
-
-        // try to borrow the max amount to borrow
-        uint256 initialBalance = tokenAddress[_vault].balanceOf(address(this));
-        // comment vérifier le montant max à emprunter ?
-        // borrow the amount from Qidao
-        tokenAddress[_vault].borrowToken(vaultID, _maxAmountToBorrow, _front);
-        // check the amount of _vault in our contract
-        uint256 finalBalance = tokenAddress[_vault].balanceOf(address(this));
-        // check that the amount borrowed is equal or superior to the amount of _vault in our contract
-        require(finalBalance-initialBalance>=_maxAmountToBorrow, "the amount borrowed hasn't been received");
-        // mappping to keep track of the amount borrowed by msg.sender
-        borrowedAmount[msg.sender][_vault] += _maxAmountToBorrow;
+        // update the mapping with the amount authorized 
+        hasDelegated[_owner][_borrower][_vault] = _amount; 
+        emit Approved(_owner, _borrower, _amount, _vault);
 
     }
 
-    function erc721_withdraw(string _vault, uint256 _erc721_Id) public{
-        // check that the msg sender is the owner of the nft
-        require(r, "You must be the owner of the token");
-        // check that the nft is in our contract
-        require(tokenAddress[_vault].ownerOf(_erc721_Id)==address(this), "the ERC721 is not in our contract");
-        // check that the nft is not borrowed
-        require(borrowedAmount[msg.sender][_vault]==0, "the ERC721 is borrowed");
-        // call safeTransferFrom in the vault contract
-        tokenAddress[_vault].safeTransferFrom(address(this), msg.sender, _erc721_Id); // ????? fonctionne ?????
-        // check if our contract received the nft
-        require(tokenAddress[_vault].ownerOf(_erc721_Id)==msg.sender, "the ERC721 is not in our contract");
-        // emit event
-        emit Withdrawn(msg.sender, _erc721_Id);
-    }
 
 
-    // fonction pour approuver la délagation
-    // voir comment remplacer les owner par msg.sender sur remix 
-    function approveDelegation(address _owner, address _borrower, uint _amount) public { // ATTENTION : si on reduit la quantité que l'emprunteur peut emprunter, il peut y avoir une sorte de dette négative
-    }
-
-
-
-    // borrow
+    // function to call for the borrower to get the fund 
     function borrow(uint _amount, address _delegator, string _vault) public {
+        //check that the amount borrow is not superior to the amount delegated 
+        require(_amount!=0, "Can't borrow 0 token"); 
+        require(_amount<= hasDelegated[_delegator][msg.sender][_vault], "Borrow an amount superior to the amount delegated");
+
+        //call the fonction on the mini matic contract to send the 
+        maiEth.transferFrom(address(this),msg.sender,_amount); 
+        //+= to prevent someone calling the contract with a small amount to change his debt 
+        borrowedAmount[msg.sender][_vault] += _amount; 
+        emit Borrowed(_amount, _delegator, _vault);
     }    
 
 
-    // repay
-    function payToMaiFinance(uint _amount, address _delegator, string _vault) public {
-
+    // repay to mai finance to deposit collateral 
+    function addCollateralToMaiFinance(uint _amount,uint _tokenid, string _vault) public{
+        vaultAddress[_vault].depositCollateral(_tokenid,_amount); 
+        emit PayToMayFinance(_amount, _tokenid, _vault);
     }
     
+    // view function to get the token id of an address
+    // user=> adress that we want to see
+    //_vault=> name of the vault (WETH, WBTC)
+    function getTokenIdByVault(address user, string _vault) external view{
+        return isOwner[user][_vault]; 
+    }
 
 
     // admin functions
@@ -115,10 +99,4 @@ contract delegate {
         vaultAddress[crypto] = _vault;
     }
 
-    function edit_tokenAdress(string memory crypto, address _token) public {
-        require(admin[msg.sender], "You are not an admin");
-        tokenAddress[crypto] = _token;
-    }
-
 }
-
