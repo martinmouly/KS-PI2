@@ -17,16 +17,19 @@ contract delegate {
         vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
     }
 
+    // mapping to keep track of the amount borrowed by msg.sender
+    // borrower=>vault=>amount borrowed
+    mapping(address=> mapping(string=>uint)) public borrowedAmount;
 
     // mapping to find to who the owner has delegated and how much
     // delegator=>borrower=>amount delegated  
     mapping(address=> mapping(address=>uint)) public hasDelegated; 
 
     //keep track of the orignil owner adress of the nft vault
-    // original_owner=> nft_id
-    mapping(address=>uint256[]) public isOwner;
+    // original_owner => vault name => nft_id
+    mapping(address=>mapping(string=>uint256[])) public isOwner;
 
-
+    // vault name (WETH, WBTC, ...) mapped with the address of the associated contract
     mapping(string => address) vaultAddress;
 
     mapping(string => address) tokenAddress;
@@ -42,7 +45,7 @@ contract delegate {
         // check if our contract received the nft
         require(tokenAddress[_vault].ownerOf(_erc721_Id)==address(this), "the ERC721 is not in our contract");
         // add the nft to the mapping isOwner
-        isOwner[msg.sender].push(_erc721_Id);
+        isOwner[msg.sender][_vault].push(_erc721_Id);
         // emit event
         emit Deposited(msg.sender, _erc721_Id);
 
@@ -55,8 +58,24 @@ contract delegate {
         uint256 finalBalance = tokenAddress[_vault].balanceOf(address(this));
         // check that the amount borrowed is equal or superior to the amount of _vault in our contract
         require(finalBalance-initialBalance>=_maxAmountToBorrow, "the amount borrowed hasn't been received");
-        // 
+        // mappping to keep track of the amount borrowed by msg.sender
+        borrowedAmount[msg.sender][_vault] += _maxAmountToBorrow;
 
+    }
+
+    function erc721_withdraw(string _vault, uint256 _erc721_Id) public{
+        // check that the msg sender is the owner of the nft
+        require(r, "You must be the owner of the token");
+        // check that the nft is in our contract
+        require(tokenAddress[_vault].ownerOf(_erc721_Id)==address(this), "the ERC721 is not in our contract");
+        // check that the nft is not borrowed
+        require(borrowedAmount[msg.sender][_vault]==0, "the ERC721 is borrowed");
+        // call safeTransferFrom in the vault contract
+        tokenAddress[_vault].safeTransferFrom(address(this), msg.sender, _erc721_Id); // ????? fonctionne ?????
+        // check if our contract received the nft
+        require(tokenAddress[_vault].ownerOf(_erc721_Id)==msg.sender, "the ERC721 is not in our contract");
+        // emit event
+        emit Withdrawn(msg.sender, _erc721_Id);
     }
 
 
@@ -73,7 +92,7 @@ contract delegate {
 
 
     // repay
-    function repayToMaiFinance(uint _amount, address _delegator, string _vault) public {
+    function payToMaiFinance(uint _amount, address _delegator, string _vault) public {
 
     }
     
