@@ -60,12 +60,18 @@ contract delegate {
         require(finalBalance-initialBalance>=_maxAmountToBorrow, "the amount borrowed hasn't been received");
         // mappping to keep track of the amount borrowed by msg.sender
         borrowedAmount[msg.sender][_vault] += _maxAmountToBorrow;
-
+        // emit event
+        emit BorrowedToMaiFinance(msg.sender, _maxAmountToBorrow);
     }
+
 
     function erc721_withdraw(string _vault, uint256 _erc721_Id) public{
         // check that the msg sender is the owner of the nft
-        require(r, "You must be the owner of the token");
+        bool _isOwner = false;
+        for (uint i = 0; i < isOwner[msg.sender][_vault].length - 1; i++) {
+            if(isOwner[msg.sender][_vault][i] == _erc721_Id) {_isOwner = true;}            
+        }
+        require(isOwner[msg.sender][_vault], "You must be the owner of the token");
         // check that the nft is in our contract
         require(tokenAddress[_vault].ownerOf(_erc721_Id)==address(this), "the ERC721 is not in our contract");
         // check that the nft is not borrowed
