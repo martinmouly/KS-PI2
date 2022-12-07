@@ -91,8 +91,8 @@ contract delegate {
     }    
 
 
-    // repay
-    function payToMaiFinance(uint _amount, address _delegator, string _vault) public {
+    // add collateral
+    function addCollateralToMaiFinance(uint _amount, address _delegator, string _vault) public {
 
     }
     
