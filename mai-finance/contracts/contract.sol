@@ -107,7 +107,7 @@ contract delegate {
         emit WithdrawERC721(msg.sender, vaultAddress[_vault], _erc721_Id);
     }
 
-     function approveDelegation(address _owner, address _borrower, uint _amount, string _vault) public { // ATTENTION : si on reduit la quantité que l'emprunteur peut emprunter, il peut y avoir une sorte de dette négative
+     function approveDelegation(address _owner, address _borrower, uint _amount, string memory _vault) public { // ATTENTION : si on reduit la quantité que l'emprunteur peut emprunter, il peut y avoir une sorte de dette négative
         
         // security check
         require(_owner==msg.sender, "this address is not the owner of the funds");
@@ -123,7 +123,7 @@ contract delegate {
     }
 
     // function to call for the borrower to get the fund 
-    function borrow(uint _amount, address _delegator, string _vault) public {
+    function borrow(uint _amount, address _delegator, string memory _vault) public {
         //check that the amount borrow is not superior to the amount delegated 
         require(_amount!=0, "Can't borrow 0 token"); 
         require(_amount<= hasDelegated[_delegator][msg.sender][_vault], "Borrow an amount superior to the amount delegated");
@@ -137,7 +137,7 @@ contract delegate {
 
 
     // repay to mai finance to deposit collateral 
-    function addCollateralToMaiFinance(uint _amount,uint _tokenid, string _vault) public{
+    function addCollateralToMaiFinance(uint _amount,uint _tokenid, string memory _vault) public{
         vaultAddress[_vault].depositCollateral(_tokenid,_amount); 
         emit PayToMayFinance(_amount, _tokenid, _vault);
     }
@@ -147,7 +147,7 @@ contract delegate {
     // view function to get the token id of an address
     // user=> adress that we want to see
     //_vault=> name of the vault (WETH, WBTC)
-    function getTokenIdByVault(address user, string _vault) external view{
+    function getTokenIdByVault(address user, string calldata _vault) external view{
         return isOwner[user][_vault]; 
     }
 
