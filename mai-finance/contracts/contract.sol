@@ -11,14 +11,15 @@ contract delegate {
     event BorrowedToMaiFinance(address indexed depositor, address vault, uint256 amount);
     event WithdrawERC721(address withdrawer, address vault, uint256 tokenID);
 
-    event Approved(address indexed owner, address indexed borrower, uint amount, string vault); 
-    event PayToMayFinance(uint amount,uint tokenid, string vault); 
-    event Borrowed(uint amount, address delagator,string vault); 
+    event Approved(address indexed owner, address indexed borrower, uint amount, address vault); 
+    event PayToMayFinance(uint amount,uint tokenid, address vault); 
+    event Borrowed(uint amount, address delagator,address vault); 
+    event RepaidToOurContract(uint amount, address borrower, address vault);
 
 // mapping to know who is admin
     mapping(address => bool) admin;
 
-    address maiEth = address(0x8D6CeBD76f18E1558D4DB88138e2DeFB3909fAD6); //mini matic on eth address 
+    address maiEth = address(0x8D6CeBD76f18E1558D4DB88138e2DeFB3909fAD6); //mini matic on eth address  PK LE NOM MAIETH ??
     constructor() public {
         admin[msg.sender] = true;
         vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
@@ -26,6 +27,10 @@ contract delegate {
     }
 
     
+    //      vocabulary :
+    // delegator : the owner initial of the nft, he deposited tokens in a vault and has deposited the nft on our contract. He can delegate his nft to a borrower
+    // borrower : the person who has been delegated funds by the delegator. He can borrow tokens and repay the tokens
+
 
     // mapping to keep track of the amount borrowed by msg.sender
     // borrower=>vault=>amount borrowed
@@ -118,7 +123,7 @@ contract delegate {
 
         // update the mapping with the amount authorized 
         hasDelegated[_owner][_borrower][_vault] = _amount; 
-        emit Approved(_owner, _borrower, _amount, _vault);
+        emit Approved(_owner, _borrower, _amount, vaultAddress[_vault]);
 
     }
 
@@ -132,17 +137,37 @@ contract delegate {
         maiEth.transferFrom(address(this),msg.sender,_amount); 
         //+= to prevent someone calling the contract with a small amount to change his debt 
         borrowedAmount[msg.sender][_vault] += _amount; 
-        emit Borrowed(_amount, _delegator, _vault);
+        emit Borrowed(_amount, _delegator, vaultAddress[_vault]);
     }    
+
+    // function to allow the borrower to repay his debt 
+    function repayToOurContract(uint _amount, address _delegator, string memory _vault) public {
+        require(_amount!=0, "Can't repay 0 token"); 
+        //check that the amount borrow is not superior to the amount delegated 
+        require(_amount <= borrowedAmount[msg.sender][_vault], "Repay an amount superior to the amount borrowed");
+        // check that the borrower has enough token to repay
+        require(maiEth.balanceOf(msg.sender)>=_amount, "You don't have enough Mai to repay this amount");
+        // check the vault exist
+        require(vaultAddress[_vault], "the vault doesn't exist"); 
+        // Save the amount of Mai in our contract
+        uint256 _initialAmount = maiEth.balanceOf(address(this));
+        // Call the fonction on the mini matic contract to send the 
+        maiEth.transferFrom(msg.sender,address(this),_amount); 
+        uint256 _finalAmount = maiEth.balanceOf(address(this));
+        require(_finalAmount - _initialAmount >= _amount, "The amount of Mai sent is not the same as the amount of Mai received");
+        // Edit the mapping borrowedAmount
+        borrowedAmount[msg.sender][_vault] -= _amount; 
+        emit RepaidToOurContract(_amount, _delegator, vaultAddress[_vault]);
+    }
+
 
 
     // repay to mai finance to deposit collateral 
     function addCollateralToMaiFinance(uint _amount,uint _tokenid, string memory _vault) public{
         vaultAddress[_vault].depositCollateral(_tokenid,_amount); 
-        emit PayToMayFinance(_amount, _tokenid, _vault);
+        emit PayToMayFinance(_amount, _tokenid, vaultAddress[_vault]);
     }
 
-    
     
     // view function to get the token id of an address
     // user=> adress that we want to see
