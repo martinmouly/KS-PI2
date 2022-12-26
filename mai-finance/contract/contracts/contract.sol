@@ -194,4 +194,9 @@ contract delegate {
         vaultAddress[_tokenName] = _vault;
     }
 
+    function getDepositedValue(address _delegator, string _token) public view {
+        require(tokenAddress[_token] != 0x0000000000000000000000000000000000000000, "Unknown token");
+        return borrowedAmount[_delegator][_token];
+    }
+
 }
