@@ -169,7 +169,7 @@ contract delegate {
 
 
     // repay to mai finance to deposit collateral 
-    function addCollateralToMaiFinance(uint _amount,uint _tokenid, string memory _vault) public{
+    function addCollateralToMaiFinance(uint _amount, uint _tokenid, string memory _vault) public{
         vaultAddress[_vault].depositCollateral(_tokenid,_amount); 
         emit PayToMayFinance(_amount, _tokenid, vaultAddress[_vault]);
     }

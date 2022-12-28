@@ -27,4 +27,25 @@ borrow(uint _amount, address _delegator, string memory _vault) :
     - borrowed[_delegator][msg.sender][_vault] - hasdelegated[_delegator][msg.sender][_vault] doit être <= _amount
     - borrowed[_delegator][msg.sender][_vault] doit être augmenté de _amount
 
+repayToOurContract(uint _amount, address _delegator, string memory _vault) : 
+    - _amount doit être > 0
+    - borrowed[_delegator][msg.sender][_vault] doit être >= _amount
+    - borrowed[_delegator][msg.sender][_vault] doit être diminué de _amount
+    - le contract recoit bien _amount de token correspondants au _vault
+
+addCollateralToMaiFinance(uint _amount, uint _tokenid, string memory _vault) :
+    - le montant empruntable par notre contrat auprès de mai finance doit être augmenté de _amount
+
+addAdmin(address _admin) : 
+    - msg.sender doit être un admin
+    - ajoute _admin à la liste des admins (mapping admin)
+
+edit_vaultAdress(string memory _tokenName, address _vault)
+    - msg.sender doit être un admin
+    - _vault doit être une adresse valide
+    - _tokenName doit correspondre au nom du token associé au contrat _vault (on peut utiliser la fonction name() du contrat _vault pour comparer)
+
+// FAIRE UNE FCT QUI PERMET AU DETENTEUR DU NFT D'EMPRUNTER PLUS DE TOKENS AUPRES DE MAI FINANCE
+// FAIRE UNE FCT QUI PERMET AU DETENTEUR DU NFT DE REMBOURSER DES TOKENS AUPRES DE MAI FINANCE (EN VERIFIANT SI LES TOKENS TRANSFERES DEPUIS NOTRE CONTRAT N'ONT PAS ETE DELEGUES)
+
 
