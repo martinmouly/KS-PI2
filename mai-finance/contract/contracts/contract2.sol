@@ -32,7 +32,7 @@ contract delegate {
     // borrower : the person who has been delegated funds by the delegator. He can borrow tokens and repay the tokens
 
 
-    // mapping to keep track of the amount borrowed from may finance by our contract in the name of msg.sender 
+    // mapping to keep track of the amount borrowed from may finance by our contract in the name of the owner of the nft
     // borrower=>vault=>amount borrowed
     mapping(address=>mapping(string=>uint)) public borrowedAmount;
 
@@ -74,7 +74,7 @@ contract delegate {
         // check the amount of _vault in our contract
         uint256 finalBalance = vaultAddress[_vault].balanceOf(address(this));
         // check that the amount borrowed is equal or superior to the amount of _vault in our contract
-        require(finalBalance-initialBalance>=_maxAmountToBorrow, "the amount borrowed hasn't been received");
+        require(finalBalance-initialBalance>=_maxAmountToBorrow, "The amount borrowed hasn't been received");
         // mappping to keep track of the amount borrowed by msg.sender
         borrowedAmount[msg.sender][_vault] += _maxAmountToBorrow;
         // emit event
@@ -82,7 +82,8 @@ contract delegate {
     }
 
     // ERC721 withdraw
-    // EST CE QU'ON SUPPRIME BIEN LES DETTES LORSQU'ON RETIRE UN NFT ?????
+    // EST CE QU'ON SUPPRIME BIEN LES DETTES LORSQU'ON RETIRE UN NFT ????? NONNNNNNNNNN 
+    // EST CE QU'ON RETIRE LA VALEUR DELEGUEE A PARTIR DU NFT DANS LE MAPPING hasdelegated ????? NONNNNNNNNNN
     function erc721_withdraw(string memory _vault, uint256 _erc721_Id, bool withdrawEvenIfBorrowed) public{ // withdrawEvenIfBorrowed : true if msg.sender wants to withdraw even if all the amount borrowed is not repaid by borrower
         // check that the msg sender is the owner of the nft
         bool _isOwner = false;
@@ -91,7 +92,7 @@ contract delegate {
         }
         require(_isOwner, "You must be the owner of the token");
         // check that the nft is in our contract
-        require(vaultAddress[_vault].ownerOf(_erc721_Id)==address(this), "the ERC721 is not in our contract");
+        require(vaultAddress[_vault].ownerOf(_erc721_Id)==address(this), "The ERC721 is not in our contract");
         
         if(!withdrawEvenIfBorrowed) {
             // check if tokens have been borrowed
@@ -136,7 +137,7 @@ contract delegate {
     function borrow(uint _amount, address _delegator, string memory _vault) public {
         //check that the amount borrow is not superior to the amount delegated 
         require(_amount!=0, "Can't borrow 0 token"); 
-        require(_amount<= hasDelegated[_delegator][msg.sender][_vault], "Borrow an amount superior to the amount delegated");
+        require(_amount<= hasDelegated[_delegator][msg.sender][_vault]-borrowed[_delegator][msg.sender][_vault], "Borrow an amount superior to the amount delegated");
 
         //call the fonction on the mini matic contract to send the 
         maiEth.transferFrom(address(this),msg.sender,_amount); 

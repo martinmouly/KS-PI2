@@ -1,0 +1,30 @@
+erc721_deposit(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) :
+    - le nft provient bien de maiFinance
+    - le nft appartiens bien au msg.sender
+    - _maxAmountToBorrow doit être > 0
+    - _maxAmountToBorrow doit être <= au montant max empruntable
+    - la valeur que l'on peut déléguer doit être incrémentée de _maxAmountToBorrow
+    - le nft correspond à un vault qui existe sur mai maiFinance
+    - le nft correspond à un vault dont le token existe dans notre contrat
+
+erc721_withdraw(string memory _vault, uint256 _erc721_Id, bool withdrawEvenIfBorrowed) :
+    - msg.sender est bien le propriétaire du nft _erc721_Id
+    - le contrat possède bien le nft _erc721_Id
+    - si withdrawEvenIfBorrowed on autorise le retrait même si une partie ou tous les tokens ont été empruntés
+    - si withdrawEvenIfBorrowed = false on refuse le retrait si une partie ou tous les tokens ont été empruntés + on renvoie une erreur
+    - on retire le nft du mapping isOwner
+    - on modifie le mapping has delegated associé au nft _erc721_Id
+    - si une partie des tokens (ou tous les tokens) est empruntée et que withdrawEvenIfBorrowed = true on retire la valeur empruntée du mapping borrowed (on annule la dette de l'emprunteur)
+
+approveDelegation(address _owner, address _borrower, uint _amount, string memory _vault) :
+    - msg.sender doit avoir assez de pouvoir de déléguation (ie: borrowedAmount[msg.sender][_vault]-la somme de tout ce qu'il a délégué >= _amount) (il faut peur être faire un mapping pour avoir la somme totale que msg.sender a delegué)
+    - la valeur que _borrower peut emprunter dans _vault est augmentée de _amount
+    - _amount peut être null (on revoque les droits d'emprunt)
+    - si _amount = 0 et que le borrower a deja emprunté une partie/tous les tokens, on renvoie une erreur contenant le montant deja emprunté
+
+borrow(uint _amount, address _delegator, string memory _vault) :
+    - _amount doit être > 0
+    - borrowed[_delegator][msg.sender][_vault] - hasdelegated[_delegator][msg.sender][_vault] doit être <= _amount
+    - borrowed[_delegator][msg.sender][_vault] doit être augmenté de _amount
+
+
