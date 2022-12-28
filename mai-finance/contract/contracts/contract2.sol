@@ -32,9 +32,13 @@ contract delegate {
     // borrower : the person who has been delegated funds by the delegator. He can borrow tokens and repay the tokens
 
 
-    // mapping to keep track of the amount borrowed by msg.sender
+    // mapping to keep track of the amount borrowed from may finance by our contract in the name of msg.sender 
     // borrower=>vault=>amount borrowed
-    mapping(address=> mapping(string=>uint)) public borrowedAmount;
+    mapping(address=>mapping(string=>uint)) public borrowedAmount;
+
+    // mapping to keep track of  who, the amount and the token borrowed by each borrower from each delegator
+    // delegator=>borrower=>vault=>amount borrowed
+    mapping(address=> mapping(address=>mapping(string=>uint))) public borrowed;
 
     // mapping to find to who the owner has delegated and how much
     // delegator=>borrower=>vault=>amount delegated  
@@ -78,6 +82,7 @@ contract delegate {
     }
 
     // ERC721 withdraw
+    // EST CE QU'ON SUPPRIME BIEN LES DETTES LORSQU'ON RETIRE UN NFT ?????
     function erc721_withdraw(string memory _vault, uint256 _erc721_Id, bool withdrawEvenIfBorrowed) public{ // withdrawEvenIfBorrowed : true if msg.sender wants to withdraw even if all the amount borrowed is not repaid by borrower
         // check that the msg sender is the owner of the nft
         bool _isOwner = false;
@@ -136,7 +141,7 @@ contract delegate {
         //call the fonction on the mini matic contract to send the 
         maiEth.transferFrom(address(this),msg.sender,_amount); 
         //+= to prevent someone calling the contract with a small amount to change his debt 
-        borrowedAmount[msg.sender][_vault] += _amount; 
+        borrowed[_delegator][msg.sender][_vault] += _amount; 
         emit Borrowed(_amount, _delegator, vaultAddress[_vault]);
     }    
 
@@ -144,7 +149,7 @@ contract delegate {
     function repayToOurContract(uint _amount, address _delegator, string memory _vault) public {
         require(_amount!=0, "Can't repay 0 token"); 
         //check that the amount borrow is not superior to the amount delegated 
-        require(_amount <= borrowedAmount[msg.sender][_vault], "Repay an amount superior to the amount borrowed");
+        require(_amount <= borrowed[_delegator][msg.sender][_vault], "Repay an amount superior to the amount borrowed");
         // check that the borrower has enough token to repay
         require(maiEth.balanceOf(msg.sender)>=_amount, "You don't have enough Mai to repay this amount");
         // check the vault exist
@@ -156,7 +161,7 @@ contract delegate {
         uint256 _finalAmount = maiEth.balanceOf(address(this));
         require(_finalAmount - _initialAmount >= _amount, "The amount of Mai sent is not the same as the amount of Mai received");
         // Edit the mapping borrowedAmount
-        borrowedAmount[msg.sender][_vault] -= _amount; 
+        borrowed[_delegator][msg.sender][_vault] -= _amount; 
         emit RepaidToOurContract(_amount, _delegator, vaultAddress[_vault]);
     }
 
@@ -208,9 +213,15 @@ contract delegate {
 
     // view function to know how many token an address can borrow from a delegator
     function getMaxBorrowingAmount(address _borrower, address _delegator, string calldata _vault) external view{
-        return hasDelegated[_delegator][_borrower][_vault] - borrowedAmount[_borrower][_vault]; 
+        return borrowed[_delegator][_borrower][_vault]; 
+    }
+
+    // how many token can I borrow with 1 delegator
+    function borrowableAmount(address _borrower, address _delegator, string calldata _vault) external view{
+        return hasDelegated[_delegator][_borrower][_vault] - borrowed[_delegator][_borrower][_vault]; 
     }
 
 
-
+    // faire une fonction qui te donne toutes les addresses auprès desquelles on a des créances ?
+    // Permettre d'emprunter au nom de 1 delegateur à la fois ou est ce qu'e si tom et lea me prettent chacun 10 BTC je peux faire 1 seul emprunt de 20 BTC ?
 }
