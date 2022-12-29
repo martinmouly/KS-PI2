@@ -16,8 +16,8 @@ erc721_withdraw(string memory _vault, uint256 _erc721_Id, bool withdrawEvenIfBor
     - on modifie le mapping has delegated associé au nft _erc721_Id
     - si une partie des tokens (ou tous les tokens) est empruntée et que withdrawEvenIfBorrowed = true on retire la valeur empruntée du mapping borrowed (on annule la dette de l'emprunteur)
 
-approveDelegation(address _owner, address _borrower, uint _amount, string memory _vault) :
-    - msg.sender doit avoir assez de pouvoir de déléguation (ie: borrowedAmount[msg.sender][_vault]-la somme de tout ce qu'il a délégué >= _amount) (il faut peur être faire un mapping pour avoir la somme totale que msg.sender a delegué)
+approveDelegation(address _borrower, uint _amount, string memory _vault) :
+    - msg.sender doit avoir assez de pouvoir de déléguation (ie: borrowedAmount[msg.sender][_vault]-totalDelegated[msg.sender][_vault] >= _amount) 
     - la valeur que _borrower peut emprunter dans _vault est augmentée de _amount
     - _amount peut être null (on revoque les droits d'emprunt)
     - si _amount = 0 et que le borrower a deja emprunté une partie/tous les tokens, on renvoie une erreur contenant le montant deja emprunté
@@ -26,12 +26,14 @@ borrow(uint _amount, address _delegator, string memory _vault) :
     - _amount doit être > 0
     - borrowed[_delegator][msg.sender][_vault] - hasdelegated[_delegator][msg.sender][_vault] doit être <= _amount
     - borrowed[_delegator][msg.sender][_vault] doit être augmenté de _amount
+    - totalBorrowed[msg.sender][_vault] doit être augmenté de _amount
 
 repayToOurContract(uint _amount, address _delegator, string memory _vault) : 
     - _amount doit être > 0
     - borrowed[_delegator][msg.sender][_vault] doit être >= _amount
     - borrowed[_delegator][msg.sender][_vault] doit être diminué de _amount
     - le contract recoit bien _amount de token correspondants au _vault
+    - totalBorrowed[msg.sender][_vault] doit être diminué de _amount (si par hasard, totalBorrowed[msg.sender][_vault] deviens négatif, on le met à 0 et QUE FAIRE DU RESTE ?)
 
 addCollateralToMaiFinance(uint _amount, uint _tokenid, string memory _vault) :
     - le montant empruntable par notre contrat auprès de mai finance doit être augmenté de _amount
