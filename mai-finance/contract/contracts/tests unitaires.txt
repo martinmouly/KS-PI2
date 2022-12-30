@@ -35,8 +35,13 @@ repayToOurContract(uint _amount, address _delegator, string memory _vault) :
     - le contract recoit bien _amount de token correspondants au _vault
     - totalBorrowed[msg.sender][_vault] doit être diminué de _amount (si par hasard, totalBorrowed[msg.sender][_vault] deviens négatif, on le met à 0 et QUE FAIRE DU RESTE ?)
 
+addCollateralToMaiFinanceFromOurContract(uint _amount, uint _tokenid, string memory _vault) :
+    - le montant empruntable par notre contrat auprès de mai finance doit être augmenté de _amount
+    - totalDelegated[msg.sender][_vault] + _amount doit être <= borrowedAmount[msg.sender][_vault]
+
 addCollateralToMaiFinance(uint _amount, uint _tokenid, string memory _vault) :
     - le montant empruntable par notre contrat auprès de mai finance doit être augmenté de _amount
+
 
 addAdmin(address _admin) : 
     - msg.sender doit être un admin

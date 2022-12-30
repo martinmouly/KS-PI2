@@ -12,7 +12,7 @@ contract delegate {
     event WithdrawERC721(address withdrawer, address vault, uint256 tokenID);
 
     event Approved(address indexed owner, address indexed borrower, uint amount, address vault); 
-    event PayToMayFinance(uint amount,uint tokenid, address vault); 
+    event PayToMayFinance(uint amount,uint tokenid, address vault, bool fromOurContract); // if fromOurContract is true, the amount has been paid by our contract to the borrower, if false, the amount has been paid by the borrower to mai finance through our contract  
     event Borrowed(uint amount, address delagator,address vault); 
     event RepaidToOurContract(uint amount, address borrower, address vault);
 
@@ -62,7 +62,8 @@ contract delegate {
     // token name (WETH, WBTC, ...) mapped with the address of their contract
     mapping(string => address) tokenAddress;
 
-    // ERC721 deposit
+    // ERC721 deposit 
+    // VERIFIER QUE _VAULT CORRESPOND BIEN AU VAULT DU NFT 
     function erc721_deposit(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) public{ 
         // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance => normalement c'est ok : on require auprès du vault que le owner du nft est bien notre contract
         // check that the msg sender is the owner of the nft
@@ -91,7 +92,7 @@ contract delegate {
     // ERC721 withdraw
     // EST CE QU'ON SUPPRIME BIEN LES DETTES LORSQU'ON RETIRE UN NFT ????? NONNNNNNNNNN 
     // EST CE QU'ON RETIRE LA VALEUR DELEGUEE A PARTIR DU NFT DANS LE MAPPING hasdelegated ????? NONNNNNNNNNN
-    // EST CE QU4ON FAIT PAYER LES REPAIEMENT FEES ? NONNNNNNNNNN
+    // EST CE QU'ON FAIT PAYER LES REPAIEMENT FEES ? NONNNNNNNNNN
     // TOUT EST A REVOIR LA DEDANS
     function erc721_withdraw(string memory _vault, uint256 _erc721_Id, bool withdrawEvenIfBorrowed) public{ // withdrawEvenIfBorrowed : true if msg.sender wants to withdraw even if all the amount borrowed is not repaid by borrower
         // check that the msg sender is the owner of the nft
@@ -187,13 +188,29 @@ contract delegate {
 
 
 
-    // repay to mai finance to deposit collateral 
-    function addCollateralToMaiFinance(uint _amount, uint _tokenid, string memory _vault) public{
-        vaultAddress[_vault].depositCollateral(_tokenid,_amount); 
-        emit PayToMayFinance(_amount, _tokenid, vaultAddress[_vault]);
+    // // repay to mai finance to deposit collateral => DOIT RENVOYER SUR MAI FINANCE LES TOKENS DE MSG.SENDER, PAS CEUX DU CONTRACT
+    // function addCollateralToMaiFinance(uint _amount, uint _tokenid, string memory _vault) public{
+    //     vaultAddress[_vault].depositCollateral(_tokenid,_amount); 
+    //     emit PayToMayFinance(_amount, _tokenid, vaultAddress[_vault],false);
+    // }
+
+    // allow the owner of the _tokenId to add collateral to mai finance from the amount borrowed by our contract
+    function addCollateralToMaiFinanceFromOurContract(uint _amount, uint _tokenid, string memory _vault) public {
+        // check if msg.sender is the owner of _tokenid      
+        require(isOwnedBy(_tokenId), "You are not the owner of this token");
+        // correspond to the vault of the token
+        require(vaultAddress[_vault], "the vault doesn't exist");
+        // check if the amount is not superior to the available amount 
+        require(_amount<=totalDelegated[msg.sender][_vault]-totalBorrowed[msg.sender][_vault] , "The amount is superior to the amount borrowed");
+        // check if the amount is not superior to the amount borrowed by our contract
+        require(_amount<=borrowedAmount[msg.sender][_vault], "The amount is superior to the amount borrowed by our contract");
+
+        // call the function on the vault contract to deposit the collateral
+        vaultAddress[_vault].depositCollateral(_tokenid,_amount);
+        // edit the mapping borrowedAmount
+        borrowedAmount[msg.sender][_vault] -= _amount;
+        emit PayToMayFinance(_amount, _tokenid, vaultAddress[_vault],true);
     }
-
-
 
     // admin functions
 
@@ -218,6 +235,7 @@ contract delegate {
         function isAdmin(address _admin) public view returns(bool) {
         return admin[_admin];
     }
+
 
     // view function to get the token id of an address
     // user=> adress that we want to see
@@ -265,6 +283,17 @@ contract delegate {
         return totalBorrowed[_delegator];
     }
 
+    // is an address the owner of _tokenId ?
+    function isOwnedBy(uint256 _tokenId, string memory _vault) public view{
+        bool owner = false;
+        for (uint i = 0; i < isOwner[msg.sender][_vault].length - 1; i++) {
+            if(isOwner[msg.sender][_vault][i] == _tokenid){
+                owner = true;
+                break;
+            }
+        }
+        return owner;
+    }
 
     // faire une fonction qui te donne toutes les addresses auprès desquelles on a des créances ?
     // Permettre d'emprunter au nom de 1 delegateur à la fois ou est ce qu'e si tom et lea me prettent chacun 10 BTC je peux faire 1 seul emprunt de 20 BTC ?
