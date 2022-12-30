@@ -189,6 +189,7 @@ contract delegate {
 
 
     // // repay to mai finance to deposit collateral => DOIT RENVOYER SUR MAI FINANCE LES TOKENS DE MSG.SENDER, PAS CEUX DU CONTRACT
+    // // ATTENTION, COMMENT ON GERE LES TOKENS QUI ON ETE EMPRUNTES PAR NOTRE CONTRAT MAIS REMBOURSES PAR QUELQU'UN ?
     // function addCollateralToMaiFinance(uint _amount, uint _tokenid, string memory _vault) public{
     //     vaultAddress[_vault].depositCollateral(_tokenid,_amount); 
     //     emit PayToMayFinance(_amount, _tokenid, vaultAddress[_vault],false);
