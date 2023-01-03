@@ -94,24 +94,15 @@ contract delegate {
     // EST CE QU'ON RETIRE LA VALEUR DELEGUEE A PARTIR DU NFT DANS LE MAPPING hasdelegated ????? NONNNNNNNNNN
     // EST CE QU'ON FAIT PAYER LES REPAIEMENT FEES ? NONNNNNNNNNN
     // TOUT EST A REVOIR LA DEDANS
-    function erc721_withdraw(string memory _vault, uint256 _erc721_Id, bool withdrawEvenIfBorrowed) public{ // withdrawEvenIfBorrowed : true if msg.sender wants to withdraw even if all the amount borrowed is not repaid by borrower
+    function erc721_withdraw(string memory _vault, uint256 _erc721_Id) public{
+        // check that the nft is in our contract
+        require(vaultAddress[_vault].ownerOf(_erc721_Id)==address(this), "The ERC721 is not in our contract");
         // check that the msg sender is the owner of the nft
         bool _isOwner = false;
         for (uint i = 0; i < isOwner[msg.sender][_vault].length - 1; i++) {
             if(isOwner[msg.sender][_vault][i] == _erc721_Id) {_isOwner = true; break;}            
         }
         require(_isOwner, "You must be the owner of the token");
-        // check that the nft is in our contract
-        require(vaultAddress[_vault].ownerOf(_erc721_Id)==address(this), "The ERC721 is not in our contract");
-        
-        if(!withdrawEvenIfBorrowed) {
-            // check if tokens have been borrowed
-            require(borrowed[msg.sender][_vault]-totalBorrowed[msg.sender][_vault]>=0, "Too many tokens have been borrowed. Set withdrawEvenIfBorrowed to true to withdraw the ERC721. If so, the borrower won't be able to repay the tokens borrowed");
-        }
-        else{
-            // check who are the borrowers and how much they have borrowed to the delegator in order to remove a proportionnal part of their debt
-            address[] memory _borrowers = getBorrowers(msg.sender); // ECRIRE LA FONCTION getBorrowers
-        }
         // call safeTransferFrom in the vault contract
         vaultAddress[_vault].safeTransferFrom(address(this), msg.sender, _erc721_Id); // ????? fonctionne ?????
         // check if msg.sender received the nft
@@ -177,7 +168,7 @@ contract delegate {
         // Save the amount of Mai in our contract
         uint256 _initialAmount = maiEth.balanceOf(address(this));
         // Call the fonction on the mini matic contract to send the 
-        maiEth.transferFrom(msg.sender,address(this),_amount); 
+        maiEth.transferFrom(msg.sender,address(this),_amount); // REQUIRE UN APPROVE AVANT NON ?
         uint256 _finalAmount = maiEth.balanceOf(address(this));
         require(_finalAmount - _initialAmount >= _amount, "The amount of Mai sent is not the same as the amount of Mai received");
         // Edit the mapping borrowedAmount
