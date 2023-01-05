@@ -69,7 +69,7 @@ contract delegate {
         // check that the msg sender is the owner of the nft
         require(vaultAddress[_vault].ownerOf(_erc721_Id)==msg.sender, "You must be the owner of the token");
         // call safeTransferFrom in the vault contract
-        vaultAddress[_vault].safeTransferFrom(msg.sender, address(this), _erc721_Id); // ????? fonctionne ?????
+        vaultAddress[_vault].safeTransferFrom(msg.sender, address(this), _erc721_Id); // APPELER LA FCT AU NOM DU MSG.SENDER 
         // check if our contract received the nft
         require(vaultAddress[_vault].ownerOf(_erc721_Id)==address(this), "the ERC721 is not in our contract");
         // add the nft to the mapping isOwner
@@ -78,6 +78,7 @@ contract delegate {
         uint256 initialBalance = vaultAddress[_vault].balanceOf(address(this));
         // comment vérifier le montant max à emprunter ?
         // borrow the amount from Qidao
+        uint256 _front = 0;
         vaultAddress[_vault].borrowToken(_erc721_Id, _maxAmountToBorrow, _front);
         // check the amount of _vault in our contract
         uint256 finalBalance = vaultAddress[_vault].balanceOf(address(this));
@@ -119,10 +120,10 @@ contract delegate {
         emit WithdrawERC721(msg.sender, vaultAddress[_vault], _erc721_Id);
     }
 
-    function approveDelegation(address _borrower, uint _amount, string memory _vault) public { // ATTENTION : si on reduit la quantité que l'emprunteur peut emprunter, il peut y avoir une sorte de dette négative
+    function approveDelegation(address _borrower, uint _amount, string memory _vault) public {
         
         // security check
-        require(delegationCapacity(address _delegator, string memory _vault)-_amount>=0, "the amount delegated is superior to the amount authorized");
+        require(delegationCapacity(msg.sender, _vault)-_amount>=0, "the amount delegated is superior to the amount authorized");
         require(_borrower!=address(0), "borrower can't be address(0)");
         require(_borrower!=msg.sender, "borrower must be different that owner");
         require(_amount>0, "amount borrowed must be superior to 0");
@@ -133,7 +134,7 @@ contract delegate {
             totalDelegated[msg.sender][_vault] += (_amount-hasDelegated[msg.sender][_borrower][_vault]);
         }
         else{
-            totalDelegated[msg.sender][_vault] += (hasDelegated[msg.sender][_borrower][_vault]-_amount)
+            totalDelegated[msg.sender][_vault] += (hasDelegated[msg.sender][_borrower][_vault]-_amount);
         }
         hasDelegated[msg.sender][_borrower][_vault] = _amount;       
 
@@ -189,7 +190,7 @@ contract delegate {
     // allow the owner of the _tokenId to add collateral to mai finance from the amount borrowed by our contract
     function addCollateralToMaiFinanceFromOurContract(uint _amount, uint _tokenid, string memory _vault) public {
         // check if msg.sender is the owner of _tokenid      
-        require(isOwnedBy(_tokenId), "You are not the owner of this token");
+        require(isOwnedBy(_tokenid), "You are not the owner of this token");
         // correspond to the vault of the token
         require(vaultAddress[_vault], "the vault doesn't exist");
         // check if the amount is not superior to the available amount 
@@ -219,7 +220,7 @@ contract delegate {
 
 
     // view functions
-    function getDepositedValue(address _delegator, string _token) public view {
+    function getDepositedValue(address _delegator, string memory _token) public view {
         require(tokenAddress[_token] != 0x0000000000000000000000000000000000000000, "Unknown token");
         return borrowedAmount[_delegator][_token];
     }
@@ -279,7 +280,7 @@ contract delegate {
     function isOwnedBy(uint256 _tokenId, string memory _vault) public view{
         bool owner = false;
         for (uint i = 0; i < isOwner[msg.sender][_vault].length - 1; i++) {
-            if(isOwner[msg.sender][_vault][i] == _tokenid){
+            if(isOwner[msg.sender][_vault][i] == _tokenId){
                 owner = true;
                 break;
             }
