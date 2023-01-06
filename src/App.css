@@ -1,5 +1,12 @@
 .App {
   text-align: center;
+  background-color: #282c34;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: white;
 }
 
 .App-logo {
