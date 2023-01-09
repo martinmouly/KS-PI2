@@ -6,6 +6,7 @@ import mmFox from'./img/MetaMask_Fox.png';
 import { useHistory } from "react-router-dom";
 import LendingPoolABI from './ABIs/lendingPool.json';
 import varDebtUSDCABI from './ABIs/varDebtUSDC.json';
+import usdc from './img/usdc.png'
 
 function Borrow() {
 
@@ -32,7 +33,9 @@ function Borrow() {
                 <input placeholder="Delegator address"/>        
                 <input placeholder="Amount"/><br></br>
             </form>
-            <button onClick={borrow} className='button-4'>Borrow USDC</button>
+            <button onClick={borrow} className='button-4'>Borrow
+            <img src={usdc} width={20} height={20} className="usdc"></img>USDC </button>
+                
  
         </div>
     );

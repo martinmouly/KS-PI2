@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import aaveLogo from'./img/aave-cd.png';
 import mmFox from'./img/MetaMask_Fox.png';
 import { useNavigate } from 'react-router-dom';
+import usdc from './img/usdc.png'
 
 function Home() {
 
@@ -43,9 +44,12 @@ function Home() {
       <p>Connected to : {currentAccount}</p>
       <p>I want to </p>
       <div className="delegate-or-borrow">
-        <button onClick={goToDeleg} className='button-4'>Delegate USDC</button>
-        <div className="borrow-btn"><button onClick={goToBorrow} className='button-4'>Borrow USDC</button>
-</div>
+      <button onClick={goToDeleg} className='button-4'>Delegate
+      <img src={usdc} width={20} height={20} className="usdc"></img>USDC</button>
+        <div className="borrow-btn">
+            <button onClick={goToBorrow} className='button-4'>Borrow
+            <img src={usdc} width={20} height={20} className="usdc"></img>USDC </button>
+        </div>
       </div>
     </div>
     )
