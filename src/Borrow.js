@@ -31,8 +31,9 @@ function Borrow() {
             <form className='form-box'>
                 <input placeholder="Delegator address"/>        
                 <input placeholder="Amount"/><br></br>
-                <button onClick={borrow} className='button-4'>Borrow USDC</button>
             </form>
+            <button onClick={borrow} className='button-4'>Borrow USDC</button>
+ 
         </div>
     );
 }
