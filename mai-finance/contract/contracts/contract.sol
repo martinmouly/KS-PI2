@@ -91,19 +91,25 @@ contract delegate {
     }
 
     // ERC721 withdraw
-    // EST CE QU'ON SUPPRIME BIEN LES DETTES LORSQU'ON RETIRE UN NFT ????? NONNNNNNNNNN 
-    // EST CE QU'ON RETIRE LA VALEUR DELEGUEE A PARTIR DU NFT DANS LE MAPPING hasdelegated ????? NONNNNNNNNNN
-    // EST CE QU'ON FAIT PAYER LES REPAIEMENT FEES ? NONNNNNNNNNN
-    // TOUT EST A REVOIR LA DEDANS
+    // a priori, fees déduites automatiquement par mai finance
     function erc721_withdraw(string memory _vault, uint256 _erc721_Id) public{
         // check that the nft is in our contract
-        require(vaultAddress[_vault].ownerOf(_erc721_Id)==address(this), "The ERC721 is not in our contract");
+        require(vaultAddress[_vault].ownerOf(_erc721_Id)==address(this), "The ERC721 is not owned by our contract");
         // check that the msg sender is the owner of the nft
         bool _isOwner = false;
         for (uint i = 0; i < isOwner[msg.sender][_vault].length - 1; i++) {
             if(isOwner[msg.sender][_vault][i] == _erc721_Id) {_isOwner = true; break;}            
         }
         require(_isOwner, "You must be the owner of the token");
+        // check if some tokens have been delegated
+        require(borrowedAmount[msg.sender][_vault] - totalDelegated[msg.sender] >= 0, "You cannot withdraw this token, you need to reduce the amount you have delegated first");
+        // our contract repay the amount to the vault
+        uint256 _front = 0;
+        // ATTENTION, CA NE DEVRAIT MARCHER QUE SI L'UTILISATEUR N'A DEPOSE QUE 1 NFT PAR TYPE DE VAULT. SI ON VEUT FAIRE POUR TOUS LES CAS, IL FAUT CHANGER LE CALCUL DE AMOUNT
+        uint256 value_borrowed_in_this_vault = borrowedAmount[msg.sender][_vault] - totalDelegated[msg.sender]; // pas sur de ca
+        vaultAddress[_vault].payBackToken(vaultID, value_borrowed_in_this_vault, _front);
+        // update user's dept
+        borrowedAmount[msg.sender][_vault] -= value_borrowed_in_this_vault;
         // call safeTransferFrom in the vault contract
         vaultAddress[_vault].safeTransferFrom(address(this), msg.sender, _erc721_Id); // ????? fonctionne ?????
         // check if msg.sender received the nft
