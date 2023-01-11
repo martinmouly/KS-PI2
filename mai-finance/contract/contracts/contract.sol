@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.2; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
+pragma solidity ^0.8.0; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
@@ -65,7 +65,7 @@ contract delegate {
     // ERC721 deposit 
     // VERIFIER QUE _VAULT CORRESPOND BIEN AU VAULT DU NFT 
 
-    function erc721_deposit(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) public{ 
+    function erc721_deposit(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) public payable{ 
 
         // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance => normalement c'est ok : on require auprès du vault que le owner du nft est bien notre contract
         // check that the msg sender is the owner of the nft
@@ -111,7 +111,7 @@ contract delegate {
 
     // ERC721 withdraw
     // a priori, fees déduites automatiquement par mai finance
-    function erc721_withdraw(string memory _vault, uint256 _erc721_Id) public{
+    function erc721_withdraw(string memory _vault, uint256 _erc721_Id) public payable {
         // check that the nft is in our contract
         (bool success, bytes memory data) = vaultAddress[_vault].call{value: msg.value, gas: 5000}(abi.encodeWithSignature("balanceOf(address)", address(this))); 
         address owner = abi.decode(data, (address));  
@@ -180,7 +180,7 @@ contract delegate {
     }
 
     // function to call for the borrower to get the fund 
-    function borrow(uint _amount, address _delegator, string memory _vault) public {
+    function borrow(uint _amount, address _delegator, string memory _vault) public payable {
         //check that the amount borrow is not superior to the amount delegated 
         require(_amount!=0, "Can't borrow 0 token"); 
         require(_amount<= hasDelegated[_delegator][msg.sender][_vault]-borrowed[_delegator][msg.sender][_vault], "Borrow an amount superior to the amount delegated");
@@ -196,7 +196,7 @@ contract delegate {
     }    
 
     // function to allow the borrower to repay his debt 
-    function repayToOurContract(uint _amount, address _delegator, string memory _vault) public {
+    function repayToOurContract(uint _amount, address _delegator, string memory _vault) public payable {
         require(_amount!=0, "Can't repay 0 token"); 
         //check that the amount borrow is not superior to the amount delegated 
         require(_amount <= borrowed[_delegator][msg.sender][_vault], "Repay an amount superior to the amount borrowed");
@@ -239,7 +239,7 @@ contract delegate {
     // }
 
     // allow the owner of the _tokenId to add collateral to mai finance from the amount borrowed by our contract
-    function addCollateralToMaiFinanceFromOurContract(uint _amount, uint _tokenid, string memory _vault) public {
+    function addCollateralToMaiFinanceFromOurContract(uint _amount, uint _tokenid, string memory _vault) public payable{
         // check if msg.sender is the owner of _tokenid      
         
         require(isOwnedBy(_tokenid, _vault), "You are not the owner of this token");
@@ -285,9 +285,9 @@ contract delegate {
     // view function to get the token id of an address
     // user=> adress that we want to see
     //_vault=> name of the vault (WETH, WBTC)
-    function getTokenIdByVault(address user, string calldata _vault) external view returns(uint256){
+    /*function getTokenIdByVault(address user, string calldata _vault) external view returns(uint256){
         return isOwner[user][_vault]; 
-    }
+    }*/
 
     // view function to get the amount of token borrowed by an address
     function getBorrowedAmount(address _borrower, address _delegator, string calldata _vault) external view returns(uint256){
@@ -324,8 +324,8 @@ contract delegate {
     }
 
     // get the total of tokens that have been borrowed from _delegator
-    function getTotalBorrowed(address _delegator) public view returns(uint256){
-        return totalBorrowed[_delegator];
+    function getTotalBorrowed(address _delegator, string memory _vault) public view returns(uint256){
+        return totalBorrowed[_delegator][_vault];
     }
 
     // is an address the owner of _tokenId ?
