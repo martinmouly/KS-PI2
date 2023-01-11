@@ -22,8 +22,8 @@ contract delegate {
     address maiEth = address(0x8D6CeBD76f18E1558D4DB88138e2DeFB3909fAD6); //mini matic on eth address  PK LE NOM MAIETH ??
     constructor() public {
         admin[msg.sender] = true;
-        // vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
-        // vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
+        vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
+        vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
     }
 
     
@@ -281,7 +281,7 @@ contract delegate {
         return borrowedAmount[_delegator][_token];
     }
 
-        function isAdmin(address _admin) public view returns(bool) {
+    function isAdmin(address _admin) public view returns(bool) {
         return admin[_admin];
     }
 
