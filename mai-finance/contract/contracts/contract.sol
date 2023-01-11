@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
+pragma solidity ^0.6.2; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
@@ -57,10 +57,10 @@ contract delegate {
     mapping(address=>mapping(string=>uint256[])) public isOwner;
 
     // vault name (WETH, WBTC, ...) mapped with the address of the associated mai-finance vault contract
-    mapping(string => address) vaultAddress;
+    mapping(string => address) public vaultAddress;
 
     // token name (WETH, WBTC, ...) mapped with the address of their contract
-    mapping(string => address) tokenAddress;
+    mapping(string => address) public tokenAddress;
 
     // ERC721 deposit 
     // VERIFIER QUE _VAULT CORRESPOND BIEN AU VAULT DU NFT 
@@ -162,7 +162,7 @@ contract delegate {
         require(_borrower!=address(0), "borrower can't be address(0)");
         require(_borrower!=msg.sender, "borrower must be different that owner");
         require(_amount>0, "amount borrowed must be superior to 0");
-        require(vaultAddress[_vault], "the vault doesn't exist"); // demander à nandy si ca marche 
+        require(vaultAddress[_vault] != 0x0000000000000000000000000000000000000000, "the vault doesn't exist"); // demander à nandy si ca marche 
         require(_amount-borrowed[msg.sender][_borrower][_vault]>=0, "The borrower has already borrowed more than the new authorized amount");
         // update the mapping with the amount authorized 
         if(hasDelegated[msg.sender][_borrower][_vault] <= _amount){
@@ -327,7 +327,7 @@ contract delegate {
     }
 
     // is an address the owner of _tokenId ?
-    function isOwnedBy(uint256 _tokenId, string memory _vault) public view{
+    function isOwnedBy(uint256 _tokenId, string memory _vault) public view returns(bool){
         bool owner = false;
         for (uint i = 0; i < isOwner[msg.sender][_vault].length - 1; i++) {
             if(isOwner[msg.sender][_vault][i] == _tokenId){
