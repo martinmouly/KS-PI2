@@ -285,7 +285,7 @@ contract delegate {
     // view function to get the token id of an address
     // user=> adress that we want to see
     //_vault=> name of the vault (WETH, WBTC)
-    function getTokenIdByVault(address user, string calldata _vault) external view returns(uint256){
+    function getTokenIdByVault(address user, string calldata _vault) external view returns(uint256 [] memory){
         return isOwner[user][_vault]; 
     }
 
