@@ -54,7 +54,6 @@ contract fakeMaiVault{
     function borrowToken(uint256 amount) public { // directement copié du vault wbtc
         require(_balances[msg.sender] >= amount, "not enough balance");
         _balances[msg.sender] -= amount;
-        maiDebt[msg.sender] += amount;
     }
 
     // repay

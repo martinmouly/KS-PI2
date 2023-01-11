@@ -251,7 +251,7 @@ contract delegate {
         require(_amount<=borrowedAmount[msg.sender][_vault], "The amount is superior to the amount borrowed by our contract");
 
         // call the function on the vault contract to deposit the collateral
-        vaultAddress[_vault].depositCollateral(_tokenid,_amount);
+        (bool success, bytes memory data) = vaultAddress[_vault].call{value: msg.value, gas: 5000}(abi.encodeWithSignature("depositCollateral(uint256, uint256)", _tokenid, _amount));
         // edit the mapping borrowedAmount
         borrowedAmount[msg.sender][_vault] -= _amount;
         emit PayToMayFinance(_amount, _tokenid, vaultAddress[_vault],true);
@@ -272,7 +272,7 @@ contract delegate {
 
 
     // view functions
-    function getDepositedValue(address _delegator, string memory _token) public view {
+    function getDepositedValue(address _delegator, string memory _token) public view returns(uint256) {
         require(tokenAddress[_token] != 0x0000000000000000000000000000000000000000, "Unknown token");
         return borrowedAmount[_delegator][_token];
     }
@@ -285,22 +285,22 @@ contract delegate {
     // view function to get the token id of an address
     // user=> adress that we want to see
     //_vault=> name of the vault (WETH, WBTC)
-    function getTokenIdByVault(address user, string calldata _vault) external view{
+    function getTokenIdByVault(address user, string calldata _vault) external view returns(uint256){
         return isOwner[user][_vault]; 
     }
 
     // view function to get the amount of token borrowed by an address
-    function getBorrowedAmount(address _borrower, address _delegator, string calldata _vault) external view{
+    function getBorrowedAmount(address _borrower, address _delegator, string calldata _vault) external view returns(uint256){
         return hasDelegated[_delegator][_borrower][_vault]; 
     }
 
     // view function to know how many token an address can borrow from a delegator
-    function getMaxBorrowingAmount(address _borrower, address _delegator, string calldata _vault) external view{
+    function getMaxBorrowingAmount(address _borrower, address _delegator, string calldata _vault) external view returns(uint256){
         return borrowed[_delegator][_borrower][_vault]; 
     }
 
     // how many token can I borrow with 1 delegator
-    function borrowableAmount(address _borrower, address _delegator, string calldata _vault) external view{
+    function borrowableAmount(address _borrower, address _delegator, string calldata _vault) external view returns(uint256){
         return hasDelegated[_delegator][_borrower][_vault] - borrowed[_delegator][_borrower][_vault]; 
     }
 
