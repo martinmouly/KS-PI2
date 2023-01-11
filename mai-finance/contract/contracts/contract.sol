@@ -128,7 +128,9 @@ contract delegate {
         // our contract repay the amount to the vault
         uint256 _front = 0;
         // ATTENTION, CA NE DEVRAIT MARCHER QUE SI L'UTILISATEUR N'A DEPOSE QUE 1 NFT PAR TYPE DE VAULT. SI ON VEUT FAIRE POUR TOUS LES CAS, IL FAUT CHANGER LE CALCUL DE AMOUNT
-        uint256 value_borrowed_in_this_vault = borrowedAmount[msg.sender][_vault] - totalDelegated[msg.sender][_vault] - vaultAddress[_vault].updateVaultDebt(_erc721_Id); // pas sur de ca
+        (bool success0, bytes memory data0) = vaultAddress[_vault].call{value: msg.value, gas:5000}(abi.encodeWithSignature("updateVaultDebt(uint256)", _erc721_Id));
+        uint256 value_to_repay = abi.decode(data0, (uint256));
+        uint256 value_borrowed_in_this_vault = borrowedAmount[msg.sender][_vault] - totalDelegated[msg.sender][_vault] - value_to_repay; // pas sur de ca
         //vaultAddress[_vault].payBackToken(_erc721_Id, value_borrowed_in_this_vault, _front);
         (bool success1, bytes memory data1) = vaultAddress[_vault].call{value: msg.value, gas: 5000}(abi.encodeWithSignature("payBackToken(uint256,uint256,uint256)", _erc721_Id,value_borrowed_in_this_vault, _front )); 
         // update user's dept
