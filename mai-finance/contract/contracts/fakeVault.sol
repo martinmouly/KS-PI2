@@ -18,7 +18,7 @@ contract fakeMaiVault{
     mapping (uint256 => address) private owners; // directement copié du vault wbtc
     mapping(address => uint256) private _balances; // directement copié du vault wbtc. 
 
-    function ownerOf(uint256 tokenId) public view virtual override returns (address) { // directement copié du vault wbtc
+    function ownerOf(uint256 tokenId) public view virtual returns (address) { // directement copié du vault wbtc
         address owner = owners[tokenId];
         require(owner != address(0), "ERC721: owner query for nonexistent token");
         return owner;
@@ -35,8 +35,8 @@ contract fakeMaiVault{
         return (spender == owner);
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public virtual override { // directement copié du vault wbtc
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public virtual { // directement copié du vault wbtc
+        require(_isApprovedOrOwner(msg.sender(), tokenId), "ERC721: transfer caller is not owner nor approved");
         _safeTransfer(from, to, tokenId, _data);
     }
 
@@ -45,7 +45,7 @@ contract fakeMaiVault{
     }
 
     //balanceOf
-        function balanceOf(address account) public view virtual override returns (uint256) { // directement copié du vault wbtc
+        function balanceOf(address account) public view virtual returns (uint256) { // directement copié du vault wbtc
         return _balances[account];
     }
 

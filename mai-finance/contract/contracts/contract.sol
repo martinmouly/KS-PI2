@@ -22,8 +22,8 @@ contract delegate {
     address maiEth = address(0x8D6CeBD76f18E1558D4DB88138e2DeFB3909fAD6); //mini matic on eth address  PK LE NOM MAIETH ??
     constructor() public {
         admin[msg.sender] = true;
-        vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
-        vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
+        // vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
+        // vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
     }
 
     
@@ -64,6 +64,7 @@ contract delegate {
 
     // ERC721 deposit 
     // VERIFIER QUE _VAULT CORRESPOND BIEN AU VAULT DU NFT 
+
     function erc721_deposit(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) public{ 
         // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance => normalement c'est ok : on require auprès du vault que le owner du nft est bien notre contract
         // check that the msg sender is the owner of the nft
@@ -107,7 +108,7 @@ contract delegate {
         uint256 _front = 0;
         // ATTENTION, CA NE DEVRAIT MARCHER QUE SI L'UTILISATEUR N'A DEPOSE QUE 1 NFT PAR TYPE DE VAULT. SI ON VEUT FAIRE POUR TOUS LES CAS, IL FAUT CHANGER LE CALCUL DE AMOUNT
         uint256 value_borrowed_in_this_vault = borrowedAmount[msg.sender][_vault] - totalDelegated[msg.sender]; // pas sur de ca
-        vaultAddress[_vault].payBackToken(vaultID, value_borrowed_in_this_vault, _front);
+        vaultAddress[_vault].payBackToken(_erc721_Id, value_borrowed_in_this_vault, _front);
         // update user's dept
         borrowedAmount[msg.sender][_vault] -= value_borrowed_in_this_vault;
         // call safeTransferFrom in the vault contract
