@@ -16,7 +16,8 @@ contract fakeMaiVault{
 
     mapping (address => bool) public admin; // nous
     mapping (uint256 => address) private owners; // directement copié du vault wbtc
-    mapping(address => uint256) private _balances; // directement copié du vault wbtc. 
+    mapping(address => uint256) private _balances; // mai empruntables
+    mapping(uint256 => uint256) public maiDebt; // mai empruntés par chaque vault ID
 
     function ownerOf(uint256 tokenId) public view virtual returns (address) { // directement copié du vault wbtc
         address owner = owners[tokenId];
@@ -53,6 +54,12 @@ contract fakeMaiVault{
     function borrowToken(uint256 amount) public { // directement copié du vault wbtc
         require(_balances[msg.sender] >= amount, "not enough balance");
         _balances[msg.sender] -= amount;
+        maiDebt[msg.sender] += amount;
+    }
+
+    // repay
+    function updateVaultDebt(uint256 vaultID) public returns (uint256) {
+        return  maiDebt[vaultID];
     }
 
     //utile pour nous : 
