@@ -7,7 +7,7 @@
 
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.2; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
+pragma solidity ^0.7.0; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -30,14 +30,7 @@ contract fakeMaiVault{
         return owners[tokenId] != address(0);
     }
 
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
-        require(_exists(tokenId), "ERC721: operator query for nonexistent token");
-        address owner = ownerOf(tokenId);
-        return (spender == owner);
-    }
-
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public virtual { // directement copié du vault wbtc
-        require(_isApprovedOrOwner(msg.sender(), tokenId), "ERC721: transfer caller is not owner nor approved");
         _safeTransfer(from, to, tokenId, _data);
     }
 
