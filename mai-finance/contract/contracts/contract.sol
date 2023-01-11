@@ -206,7 +206,7 @@ contract delegate {
         require(balance>= _amount, "You don't have enoughg Mai to repay this amount"); 
 
         // check the vault exist
-        require(vaultAddress[_vault], "the vault doesn't exist"); 
+        require(vaultAddress[_vault] != 0x0000000000000000000000000000000000000000, "the vault doesn't exist"); 
 
         // Save the amount of Mai in our contract
         //uint256 _initialAmount = maiEth.balanceOf(address(this));
@@ -242,7 +242,7 @@ contract delegate {
         
         require(isOwnedBy(_tokenid, _vault), "You are not the owner of this token");
         // correspond to the vault of the token
-        require(vaultAddress[_vault], "the vault doesn't exist");
+        require(vaultAddress[_vault] != 0x0000000000000000000000000000000000000000, "the vault doesn't exist");
         // check if the amount is not superior to the available amount 
         require(_amount<=totalDelegated[msg.sender][_vault]-totalBorrowed[msg.sender][_vault] , "The amount is superior to the amount borrowed");
         // check if the amount is not superior to the amount borrowed by our contract
