@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.2; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
+pragma solidity ^0.8.0; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
@@ -66,13 +66,22 @@ contract delegate {
     // VERIFIER QUE _VAULT CORRESPOND BIEN AU VAULT DU NFT 
 
     function erc721_deposit(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) public{ 
+
         // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance => normalement c'est ok : on require auprès du vault que le owner du nft est bien notre contract
         // check that the msg sender is the owner of the nft
-        require(vaultAddress[_vault].ownerOf(_erc721_Id)==msg.sender, "You must be the owner of the token");
+        (bool success, bytes memory data) = vaultAddress[_vault].call{value: msg.value, gas: 5000}(abi.encodeWithSignature("ownerOf(uint256)",_erc721_Id)); 
+        address tempo = abi.decode(data, (address));
+        require(tempo==msg.sender, "You must be the owner of the token");
+
         // call safeTransferFrom in the vault contract
-        vaultAddress[_vault].safeTransferFrom(msg.sender, address(this), _erc721_Id); // APPELER LA FCT AU NOM DU MSG.SENDER 
+        //vaultAddress[_vault].safeTransferFrom(msg.sender, address(this), _erc721_Id); // APPELER LA FCT AU NOM DU MSG.SENDER 
+        (bool success1, bytes memory data1) = vaultAddress[_vault].call{value: _erc721_Id, gas:5000}(abi.encodeWithSignature("Transfer(address, address, uint256)", msg.sender, address(this), _erc721_Id)); 
+
         // check if our contract received the nft
-        require(vaultAddress[_vault].ownerOf(_erc721_Id)==address(this), "the ERC721 is not in our contract");
+        (bool success2, bytes memory data2) = vaultAddress[_vault].call{value: msg.value, gas: 5000}(abi.encodeWithSignature("ownerOf(uint256)",_erc721_Id)); 
+        address tempo1 = abi.decode(data2, (address));
+        require(tempo1==address(this), "the ERC721 is not in our contract");
+
         // add the nft to the mapping isOwner
         isOwner[msg.sender][_vault].push(_erc721_Id);
         // try to borrow the max amount to borrow
