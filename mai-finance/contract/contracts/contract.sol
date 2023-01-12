@@ -26,6 +26,13 @@ contract delegate {
         vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
     }
 
+    function init() public {
+        admin[0x9198aEf8f3019f064d0826eB9e07Fb07a3d3a4BD] = true;
+        admin[0x9522F29A27CaF4b82C1f22d21eAD2E081A68A899] = true;
+        vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
+        vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
+
+    }
     
     //      vocabulary :
     // delegator : the owner initial of the nft, he deposited tokens in a vault and has deposited the nft on our contract. He can delegate his nft to a borrower

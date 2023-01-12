@@ -1,8 +1,11 @@
 // min des fcts a faire :
 // ownerOf
-// safeTransferFrom
 // balanceOf
 // borrowToken
+// depositCollateral
+// Transfer
+// updateVaultDebt
+// payBackToken
 // depositCollateral
 
 // SPDX-License-Identifier: MIT
@@ -15,54 +18,34 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 contract fakeMaiVault{
 
     mapping (address => bool) public admin; // nous
-    mapping (uint256 => address) private owners; // directement copié du vault wbtc
-    mapping(address => uint256) private _balances; // mai empruntables
-    mapping(uint256 => uint256) public maiDebt; // mai empruntés par chaque vault ID
+    mapping (uint256 => address) public owners; // associe un nft a son owner
+    mapping (address => uint256) public erc721Balance; // balance de nft d'un owner
+    mapping(uint256 => uint256) public _deposit; // deposit dans le vault : vault => montant total déposé
+    mapping(uint256 => uint256) public maiDebt; // montant de mai emprunté par une vault : vault => debt
 
-    function ownerOf(uint256 tokenId) public view virtual returns (address) { // directement copié du vault wbtc
-        address owner = owners[tokenId];
-        require(owner != address(0), "ERC721: owner query for nonexistent token");
-        return owner;
+    constructor(){
+        admin[msg.sender] = true;
     }
 
-    // safeTransferFrom
-    function _exists(uint256 tokenId) internal view virtual returns (bool) { 
-        return owners[tokenId] != address(0);
+    function ownerOf(uint256 _tokenId) public view returns (address) {
+        return owners[_tokenId];
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public virtual { // directement copié du vault wbtc
-        _safeTransfer(from, to, tokenId, _data);
+    function balanceOf(address _owner) public view returns (uint256) {
+        return erc721Balance[_owner];
     }
 
-    function _safeTransfer(address from, address to, uint256 tokenId, bytes memory _data) internal virtual { 
-        owners[tokenId] = to;
+    function borrowToken(uint256 _erc721_Id,uint256 amount,uint256 _front) public {
+        require(owners[_erc721_Id] == msg.sender, "You are not the owner of this NFT");
+        require(_deposit[_erc721_Id] - maiDebt * 0.8 >= amount, "You don't have enough collateral");
+        maiDebt[_erc721_Id] += amount;
+        // transfert de token
     }
 
-    //balanceOf
-        function balanceOf(address account) public view virtual returns (uint256) { // directement copié du vault wbtc
-        return _balances[account];
+    function depositCollateral(uint256 _erc721_Id,uint256 amount) public {
+        require(owners[_erc721_Id] == msg.sender, "You are not the owner of this NFT");
+        _deposit[_erc721_Id] += amount;
     }
 
-    // borrowToken
-    function borrowToken(uint256 amount) public { // directement copié du vault wbtc
-        require(_balances[msg.sender] >= amount, "not enough balance");
-        _balances[msg.sender] -= amount;
-    }
-
-    // repay
-    function updateVaultDebt(uint256 vaultID) public returns (uint256) {
-        return  maiDebt[vaultID];
-    }
-
-    //utile pour nous : 
-    function setAdmin(address _admin) public {
-        require(admin[msg.sender], "not admin");
-        admin[_admin] = true;
-    }
-
-    function editbalanceOf(address account, uint256 amount) public {
-        require(admin[msg.sender], "not admin");
-        _balances[account] = amount;
-    }
     
 }
