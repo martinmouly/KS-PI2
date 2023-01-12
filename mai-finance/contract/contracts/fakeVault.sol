@@ -6,7 +6,7 @@
 // Transfer
 // updateVaultDebt
 // payBackToken
-// depositCollateral
+
 
 // SPDX-License-Identifier: MIT
 
@@ -35,7 +35,7 @@ contract fakeMaiVault{
 
     function borrowToken(uint256 _erc721_Id,uint256 amount,uint256 _front) public {
         require(owners[_erc721_Id] == msg.sender, "You are not the owner of this NFT");
-        require(_deposit[_erc721_Id] - maiDebt * 0.8 >= amount, "You don't have enough collateral");
+        require(_deposit[_erc721_Id] - maiDebt[_erc721_Id] >= amount, "You don't have enough collateral");
         maiDebt[_erc721_Id] += amount;
         // transfert de token
     }
@@ -52,7 +52,7 @@ contract fakeMaiVault{
         erc721Balance[_to] += 1;
     }
 
-    function TransferFrom(address from, address to, uint256 amount) public {
+    function TransferFrom(address from, address _to, uint256 _erc721_Id) public {
         require(owners[_erc721_Id] == msg.sender, "You are not the owner of this NFT");
         owners[_erc721_Id] = _to;
         erc721Balance[from] -= 1;
@@ -65,7 +65,7 @@ contract fakeMaiVault{
         maiBalance[_to] += amount;
     }
 
-    function TransferMaiFrom(address from, address to, uint256 amount) public {
+    function TransferMaiFrom(address from, address _to, uint256 amount) public {
         require(maiBalance[from] >= amount, "You don't have enough mai");
         maiBalance[from] -= amount;
         maiBalance[_to] += amount;
@@ -83,15 +83,10 @@ contract fakeMaiVault{
         maiBalance[msg.sender] -= amount;
     }
 
-    function depositCollateral(uint256 vaultID, uint256 amount) public {
-        require(owners[vaultID] == msg.sender, "You are not the owner of this vault");
-        _deposit[vaultID] += amount;
-    }
-
     function withdrawCollateral(uint256 vaultID, uint256 amount) public {
         require(owners[vaultID] == msg.sender, "You are not the owner of this vault");
         require(_deposit[vaultID] >= amount, "You don't have enough collateral");
-        require(maiDebt[vaultID] * (1/0.8) <= _deposit[vaultID] - amount, "You don't have enough collateral");
+        require(maiDebt[vaultID] <= _deposit[vaultID] - amount, "You don't have enough collateral");
         _deposit[vaultID] -= amount;
         maiBalance[msg.sender] += amount;
     }
