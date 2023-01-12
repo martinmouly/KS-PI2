@@ -10,18 +10,24 @@ function Deleg() {
 
     const [delegatee, setDelegatee] = useState(null);
     const [amount, setAmount] = useState(null);
+
+
+    function handleSubmit(event) {
+        event.preventDefault();
+        delegation()
+    }
     
 
-    async function delegation() {
+    function delegation() {
         
         const variableDebtContract = "0xcfc2d9b9498cBd6F71E5E46d46082C76C4F6C695"
         const contractAbi = varDebtUSDCABI
 
-        const provider = await new ethers.providers.Web3Provider(window.ethereum);
-        const signer = await provider.getSigner();
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
     
-        const contract = await new ethers.Contract(variableDebtContract, contractAbi, signer);
-        const callFunction = await contract.approveDelegation(delegatee, amount);
+        const contract = new ethers.Contract(variableDebtContract, contractAbi, signer);
+        const callFunction = contract.approveDelegation(delegatee, amount);
       }
 
     return(
@@ -29,12 +35,13 @@ function Deleg() {
             <div className='App-header'>
              <img src={aaveLogo}></img>
             </div>
-            <form className='form-box'>
-                <input placeholder="Delegatee address"/>
-                <input placeholder="Amount"/><br></br>
-            </form>
-                <button onClick={delegation} className='button-4'>Delegate
+            <form className='form-box' onSubmit={handleSubmit}>
+                <input placeholder="Delegatee address" value={delegatee} onChange={event => setDelegatee(event.target.value)}/>
+                <input placeholder="Amount" value={amount} onChange={event => setAmount(event.target.value)}/><br></br>
+                <button className='button-4'>Delegate
                 <img src={usdc} width={20} height={20} className="usdc"></img>USDC </button>
+            </form>
+                
         </div>
     );
 }
