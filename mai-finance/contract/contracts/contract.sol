@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
+pragma solidity ^0.8.4; // regarder la version sur les contracts de qidao 0.5.5 demander à Nandy quel est le mieux 
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+//import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 //contract avec les adresses du mainnet ETHEREUM !!!!!!!
 contract delegate {
 
+    error Unauthorized(); 
 
     event BorrowedToMaiFinance(address indexed depositor, address vault, uint256 amount);
     event WithdrawERC721(address withdrawer, address vault, uint256 tokenID);
@@ -21,9 +22,10 @@ contract delegate {
 
     address maiEth = address(0x8D6CeBD76f18E1558D4DB88138e2DeFB3909fAD6); //mini matic on eth address  PK LE NOM MAIETH ??
     constructor() public {
-        admin[msg.sender] = true;
-        vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
-        vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
+        //admin[msg.sender] = true;
+        //vaultAddress["WETH"] = address(0x98eb27E5F24FB83b7D129D789665b08C258b4cCF); // WETH vault address on ethereum
+        //vaultAddress["WBTC"] = address(0x8C45969aD19D297c9B85763e90D0344C6E2ac9d1); // WBTC vault address on ethereum
+        init(); 
     }
 
     function init() public {
@@ -61,7 +63,7 @@ contract delegate {
 
     //keep track of the orignil owner adress of the nft vault
     // original_owner => vault name => nft_id
-    mapping(address=>mapping(string=>uint256[])) public isOwner;
+    mapping(address=>mapping(string=>uint256[])) public isOwner; // mapping à la place du uint256
 
     // vault name (WETH, WBTC, ...) mapped with the address of the associated mai-finance vault contract
     mapping(string => address) public vaultAddress;
@@ -72,34 +74,36 @@ contract delegate {
     // ERC721 deposit 
     // VERIFIER QUE _VAULT CORRESPOND BIEN AU VAULT DU NFT 
 
-    function erc721_deposit(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) public payable { 
+    function erc721_deposit(string memory _vault, uint256 _erc721_Id) public payable { 
 
         // ATTENTION vérifier si le erc 721 est bien défini comme un nft de mai finance => normalement c'est ok : on require auprès du vault que le owner du nft est bien notre contract
         // check that the msg sender is the owner of the nft
-        (bool success, bytes memory data) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("ownerOf(uint256)",_erc721_Id)); 
+        (,bytes memory data) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("ownerOf(uint256)",_erc721_Id)); 
         address tempo = abi.decode(data, (address));
-        require(tempo==msg.sender, "You must be the owner of the token");
+        if(tempo==msg.sender)
+            revert Unauthorized(); 
 
         // Call safeTransferFrom in the vault contract
         //vaultAddress[_vault].safeTransferFrom(msg.sender, address(this), _erc721_Id); // APPELER LA FCT AU NOM DU MSG.SENDER 
-        (bool success1, bytes memory data1) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("Transfer(address, address, uint256)", msg.sender, address(this), _erc721_Id)); 
+        (bool success1,) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("Transfer(address, address, uint256)", msg.sender, address(this), _erc721_Id)); 
 
         // check if our contract received the nft
-        (bool success2, bytes memory data2) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("ownerOf(uint256)",_erc721_Id)); 
+        (, bytes memory data2) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("ownerOf(uint256)",_erc721_Id)); 
         address tempo1 = abi.decode(data2, (address));
-        require(tempo1==address(this), "the ERC721 is not in our contract");
+        if(tempo1==address(this)) 
+            revert Unauthorized(); 
         // add the nft to the mapping isOwner
         isOwner[msg.sender][_vault].push(_erc721_Id);
     }
     
 
-    function borrow_mai(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) public payable{
-        erc721_deposit(_vault, _erc721_Id, _maxAmountToBorrow); 
+    function contractBorrowMai(string memory _vault, uint256 _erc721_Id, uint256 _maxAmountToBorrow) external payable{
+        erc721_deposit(_vault, _erc721_Id); 
             
         
         // try to borrow the max amount to borrow
         //uint256 initialBalance = vaultAddress[_vault].balanceOf(address(this));
-        (bool success3, bytes memory data3) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("balanceOf(address)", address(this))); 
+        (, bytes memory data3) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("balanceOf(address)", address(this))); 
         uint256 initialBalance = abi.decode(data3, (uint256));
         // comment vérifier le montant max à emprunter ?
 
@@ -107,7 +111,7 @@ contract delegate {
         // borrow the amount from Qidao
         uint256 _front = 0;
         //vaultAddress[_vault].borrowToken(_erc721_Id, _maxAmountToBorrow, _front);
-        (bool success4, bytes memory data4) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("borrowToken(uint256,uint256,uint256)",_erc721_Id,_maxAmountToBorrow,_front)); 
+         (bool success,) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("borrowToken(uint256,uint256,uint256)",_erc721_Id,_maxAmountToBorrow,_front)); 
        
         // check the amount of _vault in our contract
         //uint256 finalBalance = vaultAddress[_vault].balanceOf(address(this));
@@ -126,9 +130,10 @@ contract delegate {
     // a priori, fees déduites automatiquement par mai finance
     function erc721_withdraw_requirement(string memory _vault, uint256 _erc721_Id) public payable {
         // check that the nft is in our contract
-        (bool success, bytes memory data) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("balanceOf(address)", address(this))); 
+        (, bytes memory data) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("balanceOf(address)", address(this))); 
         address owner = abi.decode(data, (address));  
-        require(owner==address(this), "The ERC721 is not owned by our contract");
+        if(owner==address(this))
+            revert Unauthorized(); 
         // check that the msg sender is the owner of the nft
         bool _isOwner = false;
         for (uint i = 0; i < isOwner[msg.sender][_vault].length - 1; i++) {
@@ -137,7 +142,7 @@ contract delegate {
         require(_isOwner, "You must be the owner of the token");
     }
 
-    function erc721_withdraw(string memory _vault, uint256 _erc721_Id) public payable{
+    function erc721_withdraw(string memory _vault, uint256 _erc721_Id) external payable{
         
         erc721_withdraw_requirement(_vault, _erc721_Id); 
         // check if some tokens have been delegated
@@ -145,16 +150,16 @@ contract delegate {
         // our contract repay the amount to the vault
         uint256 _front = 0;
         // ATTENTION, CA NE DEVRAIT MARCHER QUE SI L'UTILISATEUR N'A DEPOSE QUE 1 NFT PAR TYPE DE VAULT. SI ON VEUT FAIRE POUR TOUS LES CAS, IL FAUT CHANGER LE CALCUL DE AMOUNT
-        (bool success0, bytes memory data0) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("updateVaultDebt(uint256)", _erc721_Id));
+        (, bytes memory data0) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("updateVaultDebt(uint256)", _erc721_Id));
         uint256 value_to_repay = abi.decode(data0, (uint256));
         uint256 value_borrowed_in_this_vault = borrowedAmount[msg.sender][_vault] - totalDelegated[msg.sender][_vault] - value_to_repay; // pas sur de ca
         //vaultAddress[_vault].payBackToken(_erc721_Id, value_borrowed_in_this_vault, _front);
-        (bool success1, bytes memory data1) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("payBackToken(uint256,uint256,uint256)", _erc721_Id,value_borrowed_in_this_vault, _front )); 
+        (bool success,) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("payBackToken(uint256,uint256,uint256)", _erc721_Id,value_borrowed_in_this_vault, _front )); 
         // update user's dept
         borrowedAmount[msg.sender][_vault] -= value_borrowed_in_this_vault;
         // Call safeTransferFrom in the vault contract
         //vaultAddress[_vault].safeTransferFrom(address(this), msg.sender, _erc721_Id); // ????? fonctionne ?????
-        (bool success2, bytes memory data2) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("Transfer(address, address, uint256)", address(this),msg.sender, _erc721_Id)); 
+        (bool success2,) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("Transfer(address, address, uint256)", address(this),msg.sender, _erc721_Id)); 
 
         // remove the nft from the mapping isOwner
         delete isOwner[msg.sender][_vault][_erc721_Id];
@@ -191,14 +196,16 @@ contract delegate {
     }
 
     // function to call for the borrower to get the fund 
-    function borrow(uint _amount, address _delegator, string memory _vault) public payable {
+    function userBorrowMai(uint _amount, address _delegator, string memory _vault) public payable {
         //check that the amount borrow is not superior to the amount delegated 
-        require(_amount!=0, "Can't borrow 0 token"); 
-        require(_amount<= hasDelegated[_delegator][msg.sender][_vault]-borrowed[_delegator][msg.sender][_vault], "Borrow an amount superior to the amount delegated");
+        if(_amount!=0)
+            revert Unauthorized();
+        if(_amount<= hasDelegated[_delegator][msg.sender][_vault]-borrowed[_delegator][msg.sender][_vault])
+            revert Unauthorized(); 
 
         //delegatecall the fonction on the mini matic contract to send the 
         //maiEth.transferFrom(address(this),msg.sender,_amount); 
-        (bool success, bytes memory data) = maiEth.delegatecall(abi.encodeWithSignature("TransferFrom(address, address, uint256)", address(this), msg.sender, _amount)); 
+        (bool success, ) = maiEth.delegatecall(abi.encodeWithSignature("TransferFrom(address, address, uint256)", address(this), msg.sender, _amount)); 
         //+= to prevent someone calling the contract with a small amount to change his debt 
         borrowed[_delegator][msg.sender][_vault] += _amount; 
         totalBorrowed[_delegator][_vault] += _amount;
@@ -214,7 +221,7 @@ contract delegate {
         
         // check that the borrower has enough token to repay
         //require(maiEth.balanceOf(msg.sender)>=_amount, "You don't have enough Mai to repay this amount");
-        (bool success, bytes memory data) = maiEth.delegatecall(abi.encodeWithSignature("balanceOf(address)", msg.sender)); 
+        (, bytes memory data) = maiEth.delegatecall(abi.encodeWithSignature("balanceOf(address)", msg.sender)); 
         uint256 balance = abi.decode(data, (uint256)); 
         require(balance>= _amount, "You don't have enoughg Mai to repay this amount"); 
 
@@ -223,15 +230,15 @@ contract delegate {
 
         // Save the amount of Mai in our contract
         //uint256 _initialAmount = maiEth.balanceOf(address(this));
-        (bool success1, bytes memory data1) = maiEth.delegatecall(abi.encodeWithSignature("balanceOf(address)", address(this))); 
+        (, bytes memory data1) = maiEth.delegatecall(abi.encodeWithSignature("balanceOf(address)", address(this))); 
         uint256 _initialAmount = abi.decode(data1, (uint256)); 
 
         // Call the fonction on the mini matic contract to send the 
         //maiEth.transferFrom(msg.sender,address(this),_amount); // REQUIRE UN APPROVE AVANT NON ?
-        (bool success2, bytes memory data2) = maiEth.delegatecall(abi.encodeWithSignature("Transfer(address, address, uint256)", msg.sender, address(this), _amount)); 
+        (bool succes,) = maiEth.delegatecall(abi.encodeWithSignature("Transfer(address, address, uint256)", msg.sender, address(this), _amount)); 
 
         //uint256 _finalAmount = maiEth.balanceOf(address(this));
-        (bool success3, bytes memory data3) = maiEth.delegatecall(abi.encodeWithSignature("balanceOf(address)", address(this))); 
+        (, bytes memory data3) = maiEth.delegatecall(abi.encodeWithSignature("balanceOf(address)", address(this))); 
         uint256 _finalAmount = abi.decode(data3, (uint256)); 
         require(_finalAmount - _initialAmount >= _amount, "The amount of Mai sent is not the same as the amount of Mai received");
         // Edit the mapping borrowedAmount
@@ -262,7 +269,7 @@ contract delegate {
         require(_amount<=borrowedAmount[msg.sender][_vault], "The amount is superior to the amount borrowed by our contract");
 
         // Call the function on the vault contract to deposit the collateral
-        (bool success, bytes memory data) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("depositCollateral(uint256, uint256)", _tokenid, _amount));
+        (bool succes,) = vaultAddress[_vault].delegatecall(abi.encodeWithSignature("depositCollateral(uint256, uint256)", _tokenid, _amount));
         // edit the mapping borrowedAmount
         borrowedAmount[msg.sender][_vault] -= _amount;
         emit PayToMayFinance(_amount, _tokenid, vaultAddress[_vault],true);
@@ -315,7 +322,7 @@ contract delegate {
         return hasDelegated[_delegator][_borrower][_vault] - borrowed[_delegator][_borrower][_vault]; 
     }
 
-    // how many token can I delegate
+    //how many token can I delegate
     function maxDelegationCapacity(address _delegator, string memory _vault) public view returns(uint256){
         return borrowedAmount[_delegator][_vault];
     }

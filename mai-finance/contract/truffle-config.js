@@ -1,5 +1,5 @@
+require('dotenv').config(); 
 
-require('dotenv').config()
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 var mnemonic = process.env.mnemonic;
 var infuraApiKey = process.env.infuraApiKey;
@@ -48,13 +48,13 @@ module.exports = {
       network_id: '5', // eslint-disable-line camelcase
       gas: 0xfffffffffff,	// <-- Use this high gas value
       gasPrice: 0x01,	// <-- Use this low gas price
-    }
+    },
 
-    //ganache: {
-    //  host: "127.0.0.1",     // Localhost (default: none)
-    //  port: 7545,            // Standard Ethereum port (default: none)
-    //  network_id: "*"        // Any network (default: none)
-    // }
+    ganache: {
+      host: "127.0.0.1",     // Localhost (default: none)
+      port: 7545,            // Standard Ethereum port (default: none)
+      network_id: "*"        // Any network (default: none)
+     }
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
     // You should run a client (like ganache-cli, geth or parity) in a separate terminal
@@ -101,7 +101,7 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.7.0",    // Fetch exact version from solc-bin (default: truffle's version)
+      version: "0.8.4",    // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       // settings: {          // See the solidity docs for advice about optimization and evmVersion
       //  optimizer: {
@@ -112,7 +112,7 @@ module.exports = {
       // }
     }
   },
-  plugins: ['truffle-plugin-verify'],
+  plugins: ['truffle-plugin-verify','truffle-contract-size'],
   api_keys: {
     etherscan: '49EGJJQVN8XV1W4ZCBARWFUMPSIEI76CFG',
   },
