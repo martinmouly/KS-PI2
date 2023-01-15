@@ -1,6 +1,6 @@
 const HDWalletProvider = require("@truffle/hdwallet-provider");
-var mnemonic = "final onion proof south narrow laugh latin garden multiply pizza loyal taste"
-var infuraApiKey = "876fd86fc1614f1d9743be43b026f217"
+var mnemonic = ""
+var infuraApiKey = ""
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,
@@ -99,7 +99,7 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.6.2",    // Fetch exact version from solc-bin (default: truffle's version)
+      version: "0.8.4",    // Fetch exact version from solc-bin (default: truffle's version)
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       // settings: {          // See the solidity docs for advice about optimization and evmVersion
       //  optimizer: {
@@ -110,7 +110,7 @@ module.exports = {
       // }
     }
   },
-  plugins: ['truffle-plugin-verify'],
+  plugins: ['truffle-plugin-verify', 'truffle-contract-size'],
   api_keys: {
     etherscan: '49EGJJQVN8XV1W4ZCBARWFUMPSIEI76CFG',
   },
