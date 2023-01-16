@@ -12,7 +12,11 @@ contract delegate{
 
     mapping(address=>mapping(string=>uint256[])) public isOwner; // mapping à la place du uint256
 
-    mapping(address=>mapping(address=>mapping(string=>uint))) public hasDelegated; 
+    // owner => borrower => vaultName => tokenId => amount delegated 
+    mapping(address=>mapping(address=>mapping(string=>mapping(uint256=>uint256)))) public hasDelegated; 
+
+    mapping(address=>mapping(address=>mapping(string=>mapping(uint256=>uint256)))) public hasBorrowed; 
+
 
     mapping(string => address) public vaultAddress;
 
@@ -79,7 +83,7 @@ contract delegate{
         }
         if(ownVault==false)
             revert("You must own the vault to delegate");    
-        hasDelegated[_owner][_borrower][_vault] = _amount; 
+        hasDelegated[_owner][_borrower][_vault][_erc721_Id] = _amount; 
 
         // the delegation is approved so the contract borrow amount to my finance 
         (bool success,) = vaultAddress[_vault].call(abi.encodeWithSignature("borrowToken(uint256,uint256,uint256)",_erc721_Id,_amount,0)); 
@@ -89,12 +93,13 @@ contract delegate{
     }
 
 
-    function userBorrowMai(uint256 _amount, address _owner, address _borrower, string memory _vault) public{
+    function userBorrowMai(uint256 _amount, address _owner, address _borrower, string memory _vault, uint256 _erc721_Id) public{
         if(msg.sender != _borrower)
             revert("You must be the borrower"); 
-        if(_amount>hasDelegated[_owner][_borrower][_vault])
+        if(_amount>hasDelegated[_owner][_borrower][_vault][_erc721_Id])
             revert("you can't borrow more than the amount athorized");
         mai.transfer(msg.sender,_amount); 
+        hasBorrowed[_owner][_borrower][_vault][_erc721_Id] = _amount; 
 
     }
 
@@ -113,5 +118,13 @@ contract delegate{
         if(_isOwner!=true)
             revert("You must be the depositor of this NFT to withdraw it");
         return(true); 
+    }
+
+    function reapayLoan(uint256 _amount, address _owner, address _borrower, string memory _vault, uint256 _erc721_Id){
+            if(_amount<=0)
+                revert("You must repay more than 0 token"); 
+            mai.transferFrom(msg.sender,address(this),_amount);
+            hasBorrowed[_owner][_borrower][_vault][_erc721_Id] -= _amount; 
+
     }
 }
