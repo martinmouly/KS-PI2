@@ -10,26 +10,24 @@ function Deleg() {
 
     const [delegatee, setDelegatee] = useState(null);
     const [amount, setAmount] = useState(null);
+    
+    const varDebtAddr = "0xcfc2d9b9498cBd6F71E5E46d46082C76C4F6C695"
+    const varDebtAbi = varDebtUSDCABI
+    const multiplier = 10**6
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
 
+    function delegation() {
+        
+        
+        const contract = new ethers.Contract(varDebtAddr, varDebtAbi, signer);
+        const callFunction = contract.approveDelegation(delegatee, amount*multiplier);
+    }
 
     function handleSubmit(event) {
         event.preventDefault();
         delegation()
     }
-    
-
-    function delegation() {
-        
-        const variableDebtContract = "0xcfc2d9b9498cBd6F71E5E46d46082C76C4F6C695"
-        const contractAbi = varDebtUSDCABI
-        const decimals = 6
-
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-    
-        const contract = new ethers.Contract(variableDebtContract, contractAbi, signer);
-        const callFunction = contract.approveDelegation(delegatee, amount*(10**decimals));
-      }
 
     return(
         <div className="App">

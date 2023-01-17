@@ -123,3 +123,18 @@
   margin-left: 5px;
   margin-right: 1px;
 }
+
+.Approve {
+  margin-bottom: 10px;
+  font-size: small;
+    background: none!important;
+    border: none;
+    padding: 0!important;
+    /*optional*/
+    font-family: arial, sans-serif;
+    /*input has OS specific font-family*/
+    text-decoration: underline;
+    cursor: pointer;
+
+  
+}
