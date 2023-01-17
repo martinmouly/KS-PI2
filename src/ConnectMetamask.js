@@ -133,7 +133,11 @@ class ConnectMetamask extends React.Component {
     //const tokenUnits = await vUSDC_Polygon_Contract.decimals();
     //const tokenAmountInEther = ethers.utils.parseUnits(amount, tokenUnits);
 
-    vUSDC_Polygon_Contract.connect(signer).approveDelegation(delegatee, amount);
+    //vUSDC_Polygon_Contract
+    //  .connect(signer)
+    //  .methods.approveDelegation(delegatee, amount);
+
+    console.log(vUSDC_Polygon_Contract.connect(signer));
   }
 
   render() {
