@@ -1,10 +1,10 @@
 import './App.css';
 import { ethers } from 'ethers';
 import aaveLogo from'./img/aave-cd.png';
-import LendingPoolABI from './ABIs/lendingPool.json';
 import varDebtUSDCABI from './ABIs/varDebtUSDC.json';
 import usdc from './img/usdc.png'
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function Deleg() {
 
@@ -32,7 +32,9 @@ function Deleg() {
     return(
         <div className="App">
             <div className='App-header'>
-             <img src={aaveLogo}></img>
+            <Link to="/">
+                <img src={aaveLogo}></img>
+            </Link>
             </div>
             <form className='form-box' onSubmit={handleSubmit}>
                 <input placeholder="Delegatee address" value={delegatee} onChange={event => setDelegatee(event.target.value)}/>

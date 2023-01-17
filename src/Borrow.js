@@ -2,11 +2,10 @@ import './App.css';
 import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
 import aaveLogo from'./img/aave-cd.png';
-import mmFox from'./img/MetaMask_Fox.png';
-import { useHistory } from "react-router-dom";
 import LendingPoolABI from './ABIs/lendingPool.json';
 import usdcABI from './ABIs/usdc.json'
 import usdc from './img/usdc.png'
+import { Link } from 'react-router-dom';
 
 function Borrow() {
 
@@ -32,7 +31,7 @@ function Borrow() {
         const checkAllowance = assetContract.allowance(signer.getAddress(),poolAddr)
         checkAllowance.then((value) => {
             if(value.gte(amount*multiplier)==true){
-                poolContract.borrow(assetAddr,amount*multiplier,2,0,delegator);
+               poolContract.borrow(assetAddr,amount*multiplier,2,0,delegator);
             }
             else{
                 window.alert("You need to approve before borrowing token")
@@ -48,8 +47,11 @@ function Borrow() {
     return(
         <div className="App">
             <div className='App-header'>
-             <img src={aaveLogo}></img>
-            </div><div className="Approve">
+            <Link to="/">
+                <img src={aaveLogo}></img>
+            </Link>
+            </div>
+            <div className="Approve">
                 <a onClick={callApprove}>Approve token</a>
             </div>
             

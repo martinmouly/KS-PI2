@@ -5,9 +5,11 @@ import aaveLogo from'./img/aave-cd.png';
 import mmFox from'./img/MetaMask_Fox.png';
 import { useNavigate } from 'react-router-dom';
 import usdc from './img/usdc.png'
+import { Link } from 'react-router-dom';
 
 function Home() {
 
+  
   const [currentAccount, setCurrentAccount] = useState(null);
   const navigate = useNavigate();
 
@@ -58,7 +60,9 @@ function Home() {
   return (
     <div className="App">
       <div className='App-header'>
-        <img src={aaveLogo}></img>
+        <Link to="/">
+          <img src={aaveLogo}></img>
+        </Link>
       </div>
         {(currentAccount) ? handleClick() : connectWalletButton()}
     </div>
