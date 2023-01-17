@@ -150,6 +150,7 @@ contract fakeMaiVault is VaultNFTv4{
         require(_deposit[_erc721_Id] - maiDebt[_erc721_Id] >= _amount, "You don't have enough collateral");
         mai.safeTransfer( msg.sender, _amount);
         // transfert de token
+        maiDebt[_erc721_Id]+=_amount; 
     }
 
     function depositCollateral(uint256 _erc721_Id,uint256 amount) public {
@@ -165,28 +166,24 @@ contract fakeMaiVault is VaultNFTv4{
         erc721Balance[_to] += 1;
     }
 
-    function TransferMai(address _to, uint256 amount) public {
-        require(maiBalance[msg.sender] >= amount, "You don't have enough mai");
-        maiBalance[msg.sender] -= amount;
-        maiBalance[_to] += amount;
-    }
-
-    function TransferMaiFrom(address from, address _to, uint256 amount) public {
-        require(maiBalance[from] >= amount, "You don't have enough mai");
-        maiBalance[from] -= amount;
-        maiBalance[_to] += amount;
-    }
-
+    
     function updateVaultDebt(uint256 vaultId) public view returns (uint256) {
         return maiDebt[vaultId];
     }
 
+    // msg.sender need to approve the contract address
     function payBackToken( uint256 vaultID, uint256 amount, uint256 _front) public {
-        require(owners[vaultID] == msg.sender, "You are not the owner of this vault");
-        require(maiDebt[vaultID] >= amount, "You don't have enough debt");
-        require(maiBalance[msg.sender] >= amount, "You don't have enough mai");
+        /*if(ownerOf(vaultID) != msg.sender)
+            revert("You are not the owner of this vault");
+        
+        if(maiDebt[vaultID] <= amount)
+            revert("You don't have enough debt");
+        if(mai.balanceOf(msg.sender) <= amount)
+            revert("You don't have enough mai");
         maiDebt[vaultID] -= amount;
-        maiBalance[msg.sender] -= amount;
+
+        // allow the contract to repay*/
+        mai.safeTransferFrom(msg.sender, address(this),amount); 
     }
 
     function withdrawCollateral(uint256 vaultID, uint256 amount) public {
