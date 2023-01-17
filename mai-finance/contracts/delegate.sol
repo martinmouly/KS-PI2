@@ -22,7 +22,6 @@ contract delegate{
 
     mapping(string => address) public vaultAddress;
 
-    mapping(address=>mapping(string=>uint)) public borrowedAmount;
 
     mapping(string => mapping(uint256 => uint256)) public vaultDebt ; 
 
@@ -36,7 +35,7 @@ contract delegate{
     event NftWithdrawn(address, string, uint256); 
 
     ERC20 public mai;
-    //FakeVault public _fakevault; 
+    FakeVault public _fakevault; 
 
 
     constructor(address _mai, address _vault) {
@@ -114,17 +113,15 @@ contract delegate{
     // the _borrower must add allowance to the contract
     // PROBLEME EN APPEANT PAYBACK CAR PAS D ALLOWANCE POUR LE SAFETRANSFER 
     function repayLoan(uint256 _amount, address _owner, address _borrower, string memory _vault, uint256 _erc721_Id) public {
+        FakeVault _fake = FakeVault(vaultAddress[_vault]); 
         if(_amount!=hasBorrowed[_owner][_borrower][_vault][_erc721_Id])
             revert("You must repay the amount of the loan"); 
             
         mai.increaseAllowance(vaultAddress[_vault], _amount); 
         
         mai.transferFrom(msg.sender, address(this), _amount); 
-        (bool success2, bytes memory data )= vaultAddress[_vault].call(abi.encodeWithSignature("payBackToken(uint256, uint256, uint256)",_erc721_Id,_amount,0)); 
-        if(success2)
-            hasBorrowed[_owner][_borrower][_vault][_erc721_Id] -= _amount; 
-        else
-            revert("error calling paybackToken"); 
+        _fake.payBackToken(_erc721_Id, _amount, 0); 
+        
     }   
 
     // voir comment le contrat fait quand le borrower n'a pas emprunter 

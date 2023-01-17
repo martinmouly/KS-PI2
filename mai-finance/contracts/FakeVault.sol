@@ -116,7 +116,7 @@ contract VaultNFTv4 is ERC721 {
     
 }
 
-contract fakeMaiVault is VaultNFTv4{
+contract FakeVault is VaultNFTv4{
         using SafeERC20 for ERC20;
         ERC20 public mai;
 
