@@ -10,18 +10,26 @@ import usdc from './img/usdc.png'
 
 function Borrow() {
 
-    const borrow = async () => {
-    const provider = await new ethers.providers.Web3Provider(window.ethereum);
-    const signer =await provider.getSigner();
-    const contractAbi = LendingPoolABI
-    const poolContract = "0x4bd5643ac6f66a5237E18bfA7d47cF22f1c9F210"
+    const [delegator, setDelegator] = useState(null);
+    const [amount, setAmount] = useState(null);
 
-    const asset = "0x9FD21bE27A2B059a288229361E2fA632D8D2d074"
-    const onBehalfOf= "0xc22F7bF6c1c7Ed5220eb7Be4F0Cd8a69e9fBa0F9"
-    const amount = 100
+    function handleSubmit(event) {
+        event.preventDefault();
+        borrowLogic()
+    }
 
-    const contract = await new ethers.Contract(poolContract, contractAbi, signer);
-    const callFunction =await contract.borrow(asset,amount,2,0,onBehalfOf);
+    function borrowLogic() {
+        const contractAbi = LendingPoolABI
+        const poolContract = "0x4bd5643ac6f66a5237E18bfA7d47cF22f1c9F210"
+        const asset = "0x9FD21bE27A2B059a288229361E2fA632D8D2d074"
+        const decimals = 6
+
+        const provider =  new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+
+    
+        const contract = new ethers.Contract(poolContract, contractAbi, signer);
+        const callFunction = contract.borrow(asset,amount*(10**decimals),2,0,delegator);
   }
 
     return(
@@ -29,14 +37,13 @@ function Borrow() {
             <div className='App-header'>
              <img src={aaveLogo}></img>
             </div>
-            <form className='form-box'>
-                <input placeholder="Delegator address"/>        
-                <input placeholder="Amount"/><br></br>
+            <form className='form-box' onSubmit={handleSubmit}>
+                <input placeholder="Delegator address" value={delegator} onChange={event => setDelegator(event.target.value)}/>
+                <input placeholder="Amount" value={amount} onChange={event => setAmount(event.target.value)}/><br></br>
+                <button className='button-4'>Borrow
+                <img src={usdc} width={20} height={20} className="usdc"></img>USDC </button>
             </form>
-            <button onClick={borrow} className='button-4'>Borrow
-            <img src={usdc} width={20} height={20} className="usdc"></img>USDC </button>
                 
- 
         </div>
     );
 }

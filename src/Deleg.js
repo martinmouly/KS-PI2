@@ -22,12 +22,13 @@ function Deleg() {
         
         const variableDebtContract = "0xcfc2d9b9498cBd6F71E5E46d46082C76C4F6C695"
         const contractAbi = varDebtUSDCABI
+        const decimals = 6
 
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
     
         const contract = new ethers.Contract(variableDebtContract, contractAbi, signer);
-        const callFunction = contract.approveDelegation(delegatee, amount);
+        const callFunction = contract.approveDelegation(delegatee, amount*(10**decimals));
       }
 
     return(
