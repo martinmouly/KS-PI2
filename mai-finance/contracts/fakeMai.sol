@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract EditableERC20 is Ownable, ERC20 {
+contract fakeMai is Ownable, ERC20 {
     string public _name;
     string public _symbol;
 
@@ -11,7 +11,7 @@ contract EditableERC20 is Ownable, ERC20 {
     event SymbolChanged(string newName, address by);
     event Mint(address receiver, uint256 amount, address by);
 
-    constructor (string memory _tempName, string memory _tempSymbol) ERC20(_name, _symbol) public {
+    constructor (string memory _tempName, string memory _tempSymbol) ERC20(_name, _symbol) {
         _name = _tempName;
         _symbol = _tempSymbol;
     }

@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "hardhat/console.sol"; 
+
 import "./FakeVault.sol"; 
 
 contract delegate{
@@ -40,7 +40,7 @@ contract delegate{
 
     constructor(address _mai, address _vault) {
          
-        vaultAddress["tempo"] = address(_vault);
+        vaultAddress["test"] = address(_vault);
         mai = ERC20(_mai); 
     }
  
@@ -100,7 +100,6 @@ contract delegate{
         if(msg.sender != _borrower)
             revert("You must be the borrower"); 
         uint _amount = hasDelegated[_owner][_borrower][_vault][_erc721_Id]; 
-        console.log(_amount); 
         (bool success,) = vaultAddress[_vault].call(abi.encodeWithSignature("borrowToken(uint256,uint256,uint256)",_erc721_Id,_amount,0)); 
          if(success!=true)
             revert("Error while borrowing Token to Mai Finance");  

@@ -129,9 +129,9 @@ contract FakeVault is VaultNFTv4{
     mapping(address => uint256) public maiBalance; // monta de may détenu par chaque addresse
 
     uint256 vaultCount = 0;
-    address _mai = address(0xd9145CCE52D386f254917e481eB44e9943F39138); 
+    
 
-    constructor(string memory name, string memory symbol)VaultNFTv4(name, symbol){
+    constructor(address _mai, string memory name, string memory symbol)VaultNFTv4(name, symbol){
         mai = ERC20(_mai); 
     }
 
@@ -194,11 +194,7 @@ contract FakeVault is VaultNFTv4{
         maiBalance[msg.sender] += amount;
     }
 
-    function newVault() public{
-        vaultCount += 1;
-        owners[vaultCount] = msg.sender;
-        erc721Balance[msg.sender] += 1;
-    }
+  
 
 
     // view
