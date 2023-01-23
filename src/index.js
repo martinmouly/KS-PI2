@@ -1,23 +1,24 @@
-import './App.css'
-import './index.css'
-import Home from './Home';
-import Borrow from './Borrow';
-import Deleg from './Deleg';
+import "./App.css";
+import "./index.css";
+import Home from "./Home";
+import Borrow from "./Borrow";
+import Supply from "./Supply";
+import Deleg from "./Deleg";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-export default function App () {
+export default function App() {
   return (
-    
-      <BrowserRouter>
+    <BrowserRouter>
       <Routes>
         <Route index element={<Home />} />
-        <Route path="/borrow" element={<Borrow />}  />
-        <Route path="/delegate" element={<Deleg />}  />
+        <Route path="/borrow" element={<Borrow />} />
+        <Route path="/supply" element={<Supply />} />
+        <Route path="/delegate" element={<Deleg />} />
       </Routes>
-      </BrowserRouter>
+    </BrowserRouter>
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
